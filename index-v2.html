@@ -7,619 +7,235 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        h1 {
-            color: #667eea;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e9ecef;
-            flex-wrap: wrap;
-        }
-        
-        .tab {
-            padding: 12px 20px;
-            background: none;
-            border: none;
-            color: #666;
-            font-weight: 600;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-            font-size: 14px;
-        }
-        
-        .tab:hover {
-            color: #667eea;
-        }
-        
-        .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-        
-        .camera-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto 20px;
-            border-radius: 15px;
-            overflow: hidden;
-            background: #000;
-        }
-        
-        video {
-            width: 100%;
-            display: block;
-            transform: scaleX(-1);
-        }
-        
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform: scaleX(-1);
-        }
-        
-        .controls {
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin: 5px;
-        }
-        
-        button:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .sign-library {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            margin: 20px 0;
-        }
-        
-        .sign-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 3px solid transparent;
-        }
-        
-        .sign-card:hover {
-            background: #e9ecef;
-            transform: translateY(-3px);
-        }
-        
-        .sign-card.active {
-            border-color: #667eea;
-            background: #eef2ff;
-        }
-        
-        .sign-emoji {
-            font-size: 36px;
-            margin-bottom: 8px;
-        }
-        
-        .sign-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
-        }
-        
-        .sign-description {
-            font-size: 10px;
-            color: #666;
-            margin-top: 5px;
-            line-height: 1.3;
-        }
-        
-        .feedback {
-            text-align: center;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            font-weight: 600;
-            font-size: 18px;
-        }
-        
-        .feedback.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .feedback.waiting {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-        }
-        
-        .stat {
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #667eea;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .section-title {
-            margin: 20px 0 10px;
-            color: #333;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        
-        .info-box {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #1565c0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: linear-gradient(135deg, #FFD54F 0%, #FFA726 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(255, 193, 7, 0.3); }
+        h1 { color: #F57C00; text-align: center; margin-bottom: 10px; font-size: 32px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+        .mode-selector { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .mode-card { background: linear-gradient(135deg, #FFF9C4 0%, #FFEB3B 100%); padding: 25px; border-radius: 15px; text-align: center; cursor: pointer; transition: all 0.3s; border: 3px solid transparent; }
+        .mode-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(255, 193, 7, 0.4); }
+        .mode-card.active { border-color: #F57C00; background: linear-gradient(135deg, #FFD54F 0%, #FFC107 100%); }
+        .mode-icon { font-size: 48px; margin-bottom: 10px; }
+        .mode-title { font-size: 20px; font-weight: 700; color: #F57C00; margin-bottom: 5px; }
+        .mode-desc { font-size: 13px; color: #666; }
+        .content-area { display: none; }
+        .content-area.active { display: block; }
+        .camera-container { position: relative; width: 100%; max-width: 500px; margin: 0 auto 20px; border-radius: 15px; overflow: hidden; background: #000; border: 4px solid #FFC107; }
+        video { width: 100%; display: block; transform: scaleX(-1); }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); }
+        button { background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%); color: #fff; border: none; padding: 15px 30px; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin: 5px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); }
+        button:hover { background: linear-gradient(135deg, #FFD54F 0%, #FFA726 100%); transform: translateY(-2px); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        button.secondary { background: #fff; color: #F57C00; border: 2px solid #FFC107; box-shadow: none; }
+        .lesson-card { background: #FFF9C4; padding: 25px; border-radius: 15px; margin-bottom: 20px; border-left: 5px solid #FFC107; }
+        .lesson-title { font-size: 24px; font-weight: 700; color: #F57C00; margin-bottom: 15px; }
+        .lesson-steps { list-style: none; padding: 0; }
+        .lesson-steps li { padding: 12px; margin: 8px 0; background: white; border-radius: 8px; font-size: 15px; border-left: 3px solid #FFB300; }
+        .quiz-question { background: #FFF9C4; padding: 30px; border-radius: 15px; margin-bottom: 20px; text-align: center; }
+        .quiz-prompt { font-size: 28px; font-weight: 700; color: #F57C00; margin-bottom: 20px; }
+        .sign-library { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin: 20px 0; }
+        .sign-card { background: #FFF9C4; padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s; border: 3px solid transparent; }
+        .sign-card:hover { background: #FFECB3; transform: translateY(-3px); }
+        .sign-card.active { border-color: #F57C00; background: #FFD54F; }
+        .sign-emoji { font-size: 36px; margin-bottom: 8px; }
+        .sign-name { font-weight: 600; color: #F57C00; font-size: 13px; }
+        .feedback { text-align: center; padding: 20px; border-radius: 15px; margin: 20px 0; font-weight: 600; font-size: 18px; }
+        .feedback.success { background: #C8E6C9; color: #2E7D32; }
+        .feedback.waiting { background: #FFF9C4; color: #F57C00; }
+        .stats { display: flex; justify-content: space-around; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #FFF9C4 0%, #FFECB3 100%); border-radius: 15px; }
+        .stat-value { font-size: 32px; font-weight: 700; color: #F57C00; }
+        .stat-label { font-size: 12px; color: #666; margin-top: 5px; }
+        .hidden { display: none; }
+        .info-box { background: #FFF9C4; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; color: #F57C00; border-left: 4px solid #FFC107; }
+        .progress-bar { width: 100%; height: 10px; background: #FFECB3; border-radius: 10px; overflow: hidden; margin: 20px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #FFC107 0%, #FF9800 100%); transition: width 0.3s; }
+        .controls { text-align: center; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🤟 ASL Learning App</h1>
-        <p class="subtitle">Practice American Sign Language for everyday communication</p>
+        <p class="subtitle">Learn American Sign Language in three easy modes!</p>
         
-        <div class="info-box">
-            📌 <strong>Note:</strong> This app uses simplified gesture detection. For best results, make clear, deliberate signs with good lighting.
+        <div class="mode-selector">
+            <div class="mode-card active" data-mode="learn"><div class="mode-icon">📚</div><div class="mode-title">LEARN</div><div class="mode-desc">Step-by-step tutorials</div></div>
+            <div class="mode-card" data-mode="test"><div class="mode-icon">✏️</div><div class="mode-title">TEST</div><div class="mode-desc">Quiz your knowledge</div></div>
+            <div class="mode-card" data-mode="practice"><div class="mode-icon">💪</div><div class="mode-title">PRACTICE</div><div class="mode-desc">Free practice mode</div></div>
         </div>
         
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value" id="score">0</div>
-                <div class="stat-label">Correct Signs</div>
+        <div id="learnMode" class="content-area active">
+            <div class="info-box">📖 <strong>Learn Mode:</strong> Follow the lessons to learn basic ASL signs!</div>
+            <div class="progress-bar"><div class="progress-fill" id="learnProgress" style="width: 0%"></div></div>
+            <div id="lessonsContainer"></div>
+            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <button class="secondary" id="prevLesson">← Previous</button>
+                <button id="nextLesson">Next Lesson →</button>
             </div>
-            <div class="stat">
-                <div class="stat-value" id="attempts">0</div>
-                <div class="stat-label">Total Attempts</div>
-            </div>
         </div>
         
-        <div class="camera-container">
-            <video id="video" autoplay playsinline></video>
-            <canvas id="canvas"></canvas>
+        <div id="testMode" class="content-area">
+            <div class="info-box">✏️ <strong>Test Mode:</strong> Make the sign shown. Camera will detect if correct!</div>
+            <div class="stats"><div class="stat"><div class="stat-value" id="testScore">0</div><div class="stat-label">Correct</div></div><div class="stat"><div class="stat-value" id="testTotal">0</div><div class="stat-label">Total</div></div></div>
+            <div class="camera-container"><video id="testVideo" autoplay playsinline></video><canvas id="testCanvas"></canvas></div>
+            <div class="controls"><button id="startTestCamera">Start Camera</button><button id="stopTestCamera" class="hidden">Stop</button></div>
+            <div id="quizContainer"></div>
+            <div class="controls"><button id="nextQuestion">Next Question →</button></div>
         </div>
         
-        <div class="controls">
-            <button id="startBtn">Start Camera</button>
-            <button id="stopBtn" class="hidden">Stop Camera</button>
+        <div id="practiceMode" class="content-area">
+            <div class="info-box">💪 <strong>Practice Mode:</strong> Choose any sign and practice at your pace!</div>
+            <div class="stats"><div class="stat"><div class="stat-value" id="practiceScore">0</div><div class="stat-label">Correct</div></div><div class="stat"><div class="stat-value" id="practiceAttempts">0</div><div class="stat-label">Attempts</div></div></div>
+            <div class="camera-container"><video id="practiceVideo" autoplay playsinline></video><canvas id="practiceCanvas"></canvas></div>
+            <div class="controls"><button id="startPracticeCamera">Start Camera</button><button id="stopPracticeCamera" class="hidden">Stop</button></div>
+            <div id="practiceFeedback" class="feedback waiting">Select a sign to practice</div>
+            <div class="sign-library" id="practiceLibrary"></div>
         </div>
-        
-        <div id="feedback" class="feedback waiting">
-            Select a sign below to practice
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" data-tab="basics">Daily Basics</button>
-            <button class="tab" data-tab="alphabet">Alphabet</button>
-            <button class="tab" data-tab="numbers">Numbers</button>
-        </div>
-        
-        <div id="basics" class="tab-content active">
-            <div class="section-title">Essential Daily Signs</div>
-            <div class="sign-library" id="basicsLibrary"></div>
-        </div>
-        
-        <div id="alphabet" class="tab-content">
-            <div class="section-title">ASL Fingerspelling Alphabet</div>
-            <div class="sign-library" id="alphabetLibrary"></div>
-        </div>
-        
-        <div id="numbers" class="tab-content">
-            <div class="section-title">Numbers 0-10</div>
-            <div class="sign-library" id="numbersLibrary"></div>
-        </div>
-        
-        <div id="loading" class="loading hidden">Loading hand tracking model...</div>
     </div>
 
     <script>
-        // Verified ASL signs based on official sources
-        const basicSigns = [
-            { name: 'Hello', emoji: '👋', id: 'hello', desc: 'Open hand salute from forehead' },
-            { name: 'Thank You', emoji: '🙏', id: 'thanks', desc: 'Flat hand from chin, move forward' },
-            { name: 'Please', emoji: '✋', id: 'please', desc: 'Flat hand, circle on chest' },
-            { name: 'Yes', emoji: '✊', id: 'yes', desc: 'Fist nods like head nodding' },
-            { name: 'No', emoji: '✌️', id: 'no', desc: 'Index+middle tap thumb' },
-            { name: 'Help', emoji: '🆘', id: 'help', desc: 'Thumbs up lifted by other hand' },
-            { name: 'Sorry', emoji: '😔', id: 'sorry', desc: 'Fist circles on chest' },
-            { name: 'Water', emoji: '💧', id: 'water', desc: 'W-shape taps chin/mouth' },
-            { name: 'Bathroom', emoji: '🚻', id: 'bathroom', desc: 'T-shape shakes side to side' },
-            { name: 'I Love You', emoji: '🤟', id: 'ily', desc: 'Thumb, index & pinky up' }
+        const signs = [
+            {name:'Hello',emoji:'👋',id:'hello',desc:'Salute from forehead',steps:['Open hand, fingers together','Touch fingertips to forehead','Move forward like salute']},
+            {name:'Thank You',emoji:'🙏',id:'thanks',desc:'Hand from chin forward',steps:['Open hand, fingers together','Touch to chin','Move forward and down']},
+            {name:'Please',emoji:'✋',id:'please',desc:'Circle on chest',steps:['Flat hand on chest','Make circular motion','Repeat 2-3 times']},
+            {name:'Yes',emoji:'✊',id:'yes',desc:'Fist nods',steps:['Make fist','Move up and down','Like nodding']},
+            {name:'No',emoji:'✌️',id:'no',desc:'Fingers tap thumb',steps:['Index and middle up','Tap against thumb','Like mouth saying no']},
+            {name:'A',emoji:'A',id:'a',desc:'Fist, thumb aside',steps:['Make fist','Thumb on side','Keep firm']},
+            {name:'I',emoji:'I',id:'i',desc:'Pinky up',steps:['Make fist','Extend pinky only','Others down']},
+            {name:'L',emoji:'L',id:'l',desc:'L-shape',steps:['Thumb sideways','Index up','Forms L']},
+            {name:'Y',emoji:'Y',id:'y',desc:'Thumb & pinky out',steps:['Make fist','Extend thumb and pinky','Hang loose']},
+            {name:'1',emoji:'1️⃣',id:'one',desc:'Index up',steps:['Make fist','Index up','Point up']},
+            {name:'2',emoji:'2️⃣',id:'two',desc:'V shape',steps:['Make fist','Index and middle','Spread apart']},
+            {name:'5',emoji:'5️⃣',id:'five',desc:'Open hand',steps:['Open completely','All fingers spread','Palm forward']}
         ];
         
-        const alphabetSigns = [
-            { name: 'A', emoji: 'A', id: 'a', desc: 'Fist with thumb on side' },
-            { name: 'B', emoji: 'B', id: 'b', desc: 'Flat hand, thumb across palm' },
-            { name: 'C', emoji: 'C', id: 'c', desc: 'Curved hand like letter C' },
-            { name: 'D', emoji: 'D', id: 'd', desc: 'Index up, others touch thumb' },
-            { name: 'E', emoji: 'E', id: 'e', desc: 'Fingers curl down to thumb' },
-            { name: 'F', emoji: 'F', id: 'f', desc: 'Index+thumb touch, 3 up' },
-            { name: 'G', emoji: 'G', id: 'g', desc: 'Index+thumb point sideways' },
-            { name: 'H', emoji: 'H', id: 'h', desc: 'Index+middle sideways' },
-            { name: 'I', emoji: 'I', id: 'i', desc: 'Pinky up only' },
-            { name: 'K', emoji: 'K', id: 'k', desc: 'Index+middle up, thumb out' },
-            { name: 'L', emoji: 'L', id: 'l', desc: 'L-shape: thumb+index' },
-            { name: 'O', emoji: 'O', id: 'o', desc: 'Fingers+thumb form O' },
-            { name: 'S', emoji: 'S', id: 's', desc: 'Fist with thumb over fingers' },
-            { name: 'U', emoji: 'U', id: 'u', desc: 'Index+middle up together' },
-            { name: 'V', emoji: 'V', id: 'v', desc: 'Index+middle spread (peace)' },
-            { name: 'W', emoji: 'W', id: 'w', desc: 'Index+middle+ring spread' },
-            { name: 'Y', emoji: 'Y', id: 'y', desc: 'Thumb+pinky extended' }
-        ];
+        let mode='learn',lesson=0,testScore=0,testTotal=0,practiceScore=0,practiceAttempts=0,currentTest=null,currentPractice=null,hands,testCam,practiceCam,lastDet=null;
         
-        const numberSigns = [
-            { name: '0', emoji: '0️⃣', id: 'zero', desc: 'O-shape with fingers' },
-            { name: '1', emoji: '1️⃣', id: 'one', desc: 'Index finger up only' },
-            { name: '2', emoji: '2️⃣', id: 'two', desc: 'Index+middle up (V shape)' },
-            { name: '3', emoji: '3️⃣', id: 'three', desc: 'Thumb+index+middle up' },
-            { name: '4', emoji: '4️⃣', id: 'four', desc: '4 fingers up (no thumb)' },
-            { name: '5', emoji: '5️⃣', id: 'five', desc: 'All 5 fingers spread open' },
-            { name: '6', emoji: '6️⃣', id: 'six', desc: 'Thumb+pinky touch' },
-            { name: '7', emoji: '7️⃣', id: 'seven', desc: 'Thumb+ring touch' },
-            { name: '8', emoji: '8️⃣', id: 'eight', desc: 'Thumb+middle touch' },
-            { name: '9', emoji: '9️⃣', id: 'nine', desc: 'Thumb+index touch' },
-            { name: '10', emoji: '🔟', id: 'ten', desc: 'Thumbs up, shake side to side' }
-        ];
-        
-        let hands, camera;
-        let currentSign = null;
-        let score = 0;
-        let attempts = 0;
-        let lastDetection = null;
-        
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const feedback = document.getElementById('feedback');
-        const loading = document.getElementById('loading');
-        
-        function renderLibrary(containerId, signs) {
-            const container = document.getElementById(containerId);
-            signs.forEach(sign => {
-                const card = document.createElement('div');
-                card.className = 'sign-card';
-                card.innerHTML = `
-                    <div class="sign-emoji">${sign.emoji}</div>
-                    <div class="sign-name">${sign.name}</div>
-                    <div class="sign-description">${sign.desc}</div>
-                `;
-                card.onclick = () => selectSign(sign, card);
-                container.appendChild(card);
-            });
-        }
-        
-        renderLibrary('basicsLibrary', basicSigns);
-        renderLibrary('alphabetLibrary', alphabetSigns);
-        renderLibrary('numbersLibrary', numberSigns);
-        
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.onclick = () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-            };
+        document.querySelectorAll('.mode-card').forEach(c=>c.onclick=()=>{
+            mode=c.dataset.mode;
+            document.querySelectorAll('.mode-card').forEach(x=>x.classList.remove('active'));
+            c.classList.add('active');
+            document.querySelectorAll('.content-area').forEach(x=>x.classList.remove('active'));
+            document.getElementById(mode+'Mode').classList.add('active');
         });
         
-        function selectSign(sign, element) {
-            currentSign = sign;
-            document.querySelectorAll('.sign-card').forEach(c => c.classList.remove('active'));
-            element.classList.add('active');
-            feedback.className = 'feedback waiting';
-            feedback.textContent = `Practice: "${sign.name}" - ${sign.desc}`;
+        function renderLesson(i){
+            const s=signs[i];
+            document.getElementById('lessonsContainer').innerHTML=`<div class="lesson-card"><div class="lesson-title">${s.emoji} ${s.name}</div><p style="margin-bottom:15px;color:#666">${s.desc}</p><ul class="lesson-steps">${s.steps.map((st,j)=>`<li><strong>Step ${j+1}:</strong> ${st}</li>`).join('')}</ul></div>`;
+            document.getElementById('learnProgress').style.width=((i+1)/signs.length*100)+'%';
+            document.getElementById('prevLesson').disabled=i===0;
+            document.getElementById('nextLesson').textContent=i===signs.length-1?'Finish! 🎉':'Next →';
         }
         
-        function updateStats() {
-            document.getElementById('score').textContent = score;
-            document.getElementById('attempts').textContent = attempts;
-        }
+        document.getElementById('prevLesson').onclick=()=>{if(lesson>0){lesson--;renderLesson(lesson);}};
+        document.getElementById('nextLesson').onclick=()=>{if(lesson<signs.length-1){lesson++;renderLesson(lesson);}else alert('🎉 Done!');};
+        renderLesson(0);
         
-        function getDistance(p1, p2) {
-            return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2) + Math.pow(p1.z - p2.z, 2));
+        function genQuestion(){
+            currentTest=signs[Math.floor(Math.random()*signs.length)];
+            document.getElementById('quizContainer').innerHTML=`<div class="quiz-question"><div class="quiz-prompt">Make: "${currentTest.name}" ${currentTest.emoji}</div><p style="color:#666;margin-top:10px">${currentTest.desc}</p></div>`;
         }
+        document.getElementById('nextQuestion').onclick=genQuestion;
+        genQuestion();
         
-        function isFingerExtended(landmarks, fingerTip, fingerPip) {
-            return landmarks[fingerTip].y < landmarks[fingerPip].y - 0.03;
-        }
-        
-        function isThumbExtended(landmarks) {
-            return landmarks[4].x < landmarks[3].x - 0.05 || landmarks[4].x > landmarks[3].x + 0.05;
-        }
-        
-        function detectGesture(landmarks) {
-            if (!landmarks || !currentSign) return null;
-            
-            // Finger indices: thumb=4, index=8, middle=12, ring=16, pinky=20
-            // PIP joints: thumb=2, index=6, middle=10, ring=14, pinky=18
-            
-            const thumbExt = isThumbExtended(landmarks);
-            const indexExt = isFingerExtended(landmarks, 8, 6);
-            const middleExt = isFingerExtended(landmarks, 12, 10);
-            const ringExt = isFingerExtended(landmarks, 16, 14);
-            const pinkyExt = isFingerExtended(landmarks, 20, 18);
-            
-            const extendedCount = [thumbExt, indexExt, middleExt, ringExt, pinkyExt].filter(Boolean).length;
-            
-            // Distance measurements for specific signs
-            const thumbIndexDist = getDistance(landmarks[4], landmarks[8]);
-            const thumbMiddleDist = getDistance(landmarks[4], landmarks[12]);
-            const thumbRingDist = getDistance(landmarks[4], landmarks[16]);
-            const thumbPinkyDist = getDistance(landmarks[4], landmarks[20]);
-            const indexMiddleDist = getDistance(landmarks[8], landmarks[12]);
-            
-            const patterns = {
-                // Basic signs - simplified detection
-                'hello': extendedCount >= 4,
-                'thanks': extendedCount >= 4,
-                'please': extendedCount >= 4,
-                'yes': !indexExt && !middleExt && !ringExt && !pinkyExt,
-                'no': indexExt && middleExt && !ringExt && !pinkyExt,
-                'help': thumbExt && !indexExt && !middleExt && !ringExt && !pinkyExt,
-                'sorry': !indexExt && !middleExt && !ringExt && !pinkyExt,
-                'water': indexExt && middleExt && ringExt && !pinkyExt,
-                'bathroom': thumbExt && indexExt && !middleExt && !ringExt && !pinkyExt,
-                'ily': thumbExt && indexExt && !middleExt && !ringExt && pinkyExt,
-                
-                // Alphabet - refined
-                'a': !indexExt && !middleExt && !ringExt && !pinkyExt && thumbExt,
-                'b': indexExt && middleExt && ringExt && pinkyExt && !thumbExt,
-                'c': extendedCount >= 3 && landmarks[8].x < landmarks[4].x,
-                'd': indexExt && !middleExt && !ringExt && !pinkyExt && !thumbExt,
-                'e': !indexExt && !middleExt && !ringExt && !pinkyExt && !thumbExt && landmarks[8].y > landmarks[6].y,
-                'f': thumbIndexDist < 0.05 && middleExt && ringExt && pinkyExt,
-                'g': thumbExt && indexExt && !middleExt && !ringExt && !pinkyExt && landmarks[8].y < landmarks[4].y,
-                'h': indexExt && middleExt && !ringExt && !pinkyExt && !thumbExt && indexMiddleDist < 0.03,
-                'i': pinkyExt && !indexExt && !middleExt && !ringExt && !thumbExt,
-                'k': thumbExt && indexExt && middleExt && !ringExt && !pinkyExt,
-                'l': thumbExt && indexExt && !middleExt && !ringExt && !pinkyExt && landmarks[8].y < landmarks[4].y,
-                'o': thumbIndexDist < 0.06 && !middleExt && !ringExt && !pinkyExt,
-                's': !indexExt && !middleExt && !ringExt && !pinkyExt && !thumbExt,
-                'u': indexExt && middleExt && !ringExt && !pinkyExt && indexMiddleDist < 0.03,
-                'v': indexExt && middleExt && !ringExt && !pinkyExt && indexMiddleDist > 0.05,
-                'w': indexExt && middleExt && ringExt && !pinkyExt,
-                'y': thumbExt && !indexExt && !middleExt && !ringExt && pinkyExt,
-                
-                // Numbers
-                'zero': thumbIndexDist < 0.06 && !middleExt && !ringExt,
-                'one': indexExt && !middleExt && !ringExt && !pinkyExt && !thumbExt,
-                'two': indexExt && middleExt && !ringExt && !pinkyExt,
-                'three': thumbExt && indexExt && middleExt && !ringExt && !pinkyExt,
-                'four': indexExt && middleExt && ringExt && pinkyExt && !thumbExt,
-                'five': extendedCount === 5,
-                'six': thumbPinkyDist < 0.08 && indexExt && middleExt && ringExt,
-                'seven': thumbRingDist < 0.08 && indexExt && middleExt && pinkyExt,
-                'eight': thumbMiddleDist < 0.08 && indexExt && ringExt && pinkyExt,
-                'nine': thumbIndexDist < 0.08 && middleExt && ringExt && pinkyExt,
-                'ten': thumbExt && !indexExt && !middleExt && !ringExt && !pinkyExt
+        signs.forEach(s=>{
+            const c=document.createElement('div');
+            c.className='sign-card';
+            c.innerHTML=`<div class="sign-emoji">${s.emoji}</div><div class="sign-name">${s.name}</div>`;
+            c.onclick=()=>{
+                currentPractice=s;
+                document.querySelectorAll('#practiceLibrary .sign-card').forEach(x=>x.classList.remove('active'));
+                c.classList.add('active');
+                document.getElementById('practiceFeedback').className='feedback waiting';
+                document.getElementById('practiceFeedback').textContent=`Practice: "${s.name}"`;
             };
-            
-            return patterns[currentSign.id] ? currentSign.id : null;
+            document.getElementById('practiceLibrary').appendChild(c);
+        });
+        
+        function isFExt(l,t,p){return l[t].y<l[p].y-0.03;}
+        function detect(l,t){
+            if(!l||!t)return false;
+            const tE=l[4].x<l[3].x-0.05||l[4].x>l[3].x+0.05,iE=isFExt(l,8,6),mE=isFExt(l,12,10),rE=isFExt(l,16,14),pE=isFExt(l,20,18);
+            const p={hello:iE&&mE&&rE&&pE,thanks:iE&&mE&&rE&&pE,please:iE&&mE&&rE&&pE,yes:!iE&&!mE&&!rE&&!pE,no:iE&&mE&&!rE&&!pE,a:!iE&&!mE&&!rE&&!pE&&tE,i:pE&&!iE&&!mE&&!rE,l:tE&&iE&&!mE&&!rE&&!pE,y:tE&&!iE&&!mE&&!rE&&pE,one:iE&&!mE&&!rE&&!pE,two:iE&&mE&&!rE&&!pE,five:tE&&iE&&mE&&rE&&pE};
+            return p[t.id]||false;
         }
         
-        function onResults(results) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            ctx.save();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                for (const landmarks of results.multiHandLandmarks) {
-                    drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-                    drawLandmarks(ctx, landmarks, {color: '#FF0000', lineWidth: 1});
-                    
-                    const detected = detectGesture(landmarks);
-                    
-                    if (detected && detected === currentSign.id) {
-                        const now = Date.now();
-                        if (!lastDetection || now - lastDetection > 2000) {
-                            score++;
-                            attempts++;
-                            lastDetection = now;
-                            updateStats();
-                            
-                            feedback.className = 'feedback success';
-                            feedback.textContent = `✅ Perfect "${currentSign.name}"! Well done!`;
-                            
-                            setTimeout(() => {
-                                if (currentSign) {
-                                    feedback.className = 'feedback waiting';
-                                    feedback.textContent = `Practice: "${currentSign.name}" - ${currentSign.desc}`;
-                                }
-                            }, 2000);
-                        }
+        function onTestRes(r){
+            const cv=document.getElementById('testCanvas'),v=document.getElementById('testVideo'),ctx=cv.getContext('2d');
+            cv.width=v.videoWidth;cv.height=v.videoHeight;ctx.clearRect(0,0,cv.width,cv.height);
+            if(r.multiHandLandmarks&&r.multiHandLandmarks.length>0&&currentTest){
+                if(detect(r.multiHandLandmarks[0],currentTest)){
+                    const n=Date.now();
+                    if(!lastDet||n-lastDet>2000){
+                        testScore++;testTotal++;lastDet=n;
+                        document.getElementById('testScore').textContent=testScore;
+                        document.getElementById('testTotal').textContent=testTotal;
+                        document.getElementById('quizContainer').innerHTML='<div class="quiz-question"><div class="quiz-prompt" style="color:#4CAF50">✅ Correct!</div></div>';
+                        setTimeout(genQuestion,2000);
                     }
                 }
             }
-            
-            ctx.restore();
         }
         
-        function drawConnectors(ctx, landmarks, connections, style) {
-            ctx.strokeStyle = style.color;
-            ctx.lineWidth = style.lineWidth;
-            
-            connections.forEach(([start, end]) => {
-                const startPoint = landmarks[start];
-                const endPoint = landmarks[end];
-                
-                ctx.beginPath();
-                ctx.moveTo(startPoint.x * canvas.width, startPoint.y * canvas.height);
-                ctx.lineTo(endPoint.x * canvas.width, endPoint.y * canvas.height);
-                ctx.stroke();
-            });
-        }
-        
-        function drawLandmarks(ctx, landmarks, style) {
-            ctx.fillStyle = style.color;
-            
-            landmarks.forEach(point => {
-                ctx.beginPath();
-                ctx.arc(point.x * canvas.width, point.y * canvas.height, 3, 0, 2 * Math.PI);
-                ctx.fill();
-            });
-        }
-        
-        const HAND_CONNECTIONS = [
-            [0,1],[1,2],[2,3],[3,4],
-            [0,5],[5,6],[6,7],[7,8],
-            [0,9],[9,10],[10,11],[11,12],
-            [0,13],[13,14],[14,15],[15,16],
-            [0,17],[17,18],[18,19],[19,20],
-            [5,9],[9,13],[13,17]
-        ];
-        
-        startBtn.onclick = async () => {
-            loading.classList.remove('hidden');
-            startBtn.disabled = true;
-            
-            try {
-                hands = new Hands({
-                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-                });
-                
-                hands.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.7,
-                    minTrackingConfidence: 0.7
-                });
-                
-                hands.onResults(onResults);
-                
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: 640, height: 480 }
-                });
-                
-                video.srcObject = stream;
-                
-                camera = new Camera(video, {
-                    onFrame: async () => {
-                        await hands.send({image: video});
-                    },
-                    width: 640,
-                    height: 480
-                });
-                
-                await camera.start();
-                
-                loading.classList.add('hidden');
-                startBtn.classList.add('hidden');
-                stopBtn.classList.remove('hidden');
-                
-            } catch (err) {
-                alert('Could not access camera: ' + err.message);
-                loading.classList.add('hidden');
-                startBtn.disabled = false;
+        function onPracticeRes(r){
+            const cv=document.getElementById('practiceCanvas'),v=document.getElementById('practiceVideo'),ctx=cv.getContext('2d');
+            cv.width=v.videoWidth;cv.height=v.videoHeight;ctx.clearRect(0,0,cv.width,cv.height);
+            if(r.multiHandLandmarks&&r.multiHandLandmarks.length>0&&currentPractice){
+                if(detect(r.multiHandLandmarks[0],currentPractice)){
+                    const n=Date.now();
+                    if(!lastDet||n-lastDet>2000){
+                        practiceScore++;practiceAttempts++;lastDet=n;
+                        document.getElementById('practiceScore').textContent=practiceScore;
+                        document.getElementById('practiceAttempts').textContent=practiceAttempts;
+                        const f=document.getElementById('practiceFeedback');
+                        f.className='feedback success';
+                        f.textContent=`✅ Perfect "${currentPractice.name}"!`;
+                        setTimeout(()=>{f.className='feedback waiting';f.textContent=`Practice: "${currentPractice.name}"`;},2000);
+                    }
+                }
             }
+        }
+        
+        document.getElementById('startTestCamera').onclick=async()=>{
+            try{
+                hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+                hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.7});
+                hands.onResults(onTestRes);
+                const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+                document.getElementById('testVideo').srcObject=s;
+                testCam=new Camera(document.getElementById('testVideo'),{onFrame:async()=>{await hands.send({image:document.getElementById('testVideo')});},width:640,height:480});
+                await testCam.start();
+                document.getElementById('startTestCamera').classList.add('hidden');
+                document.getElementById('stopTestCamera').classList.remove('hidden');
+            }catch(e){alert('Camera error: '+e.message);}
         };
         
-        stopBtn.onclick = () => {
-            if (camera) camera.stop();
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-            }
-            stopBtn.classList.add('hidden');
-            startBtn.classList.remove('hidden');
+        document.getElementById('stopTestCamera').onclick=()=>{
+            if(testCam)testCam.stop();
+            if(document.getElementById('testVideo').srcObject)document.getElementById('testVideo').srcObject.getTracks().forEach(t=>t.stop());
+            document.getElementById('stopTestCamera').classList.add('hidden');
+            document.getElementById('startTestCamera').classList.remove('hidden');
+        };
+        
+        document.getElementById('startPracticeCamera').onclick=async()=>{
+            try{
+                hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+                hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.7});
+                hands.onResults(onPracticeRes);
+                const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+                document.getElementById('practiceVideo').srcObject=s;
+                practiceCam=new Camera(document.getElementById('practiceVideo'),{onFrame:async()=>{await hands.send({image:document.getElementById('practiceVideo')});},width:640,height:480});
+                await practiceCam.start();
+                document.getElementById('startPracticeCamera').classList.add('hidden');
+                document.getElementById('stopPracticeCamera').classList.remove('hidden');
+            }catch(e){alert('Camera error: '+e.message);}
+        };
+        
+        document.getElementById('stopPracticeCamera').onclick=()=>{
+            if(practiceCam)practiceCam.stop();
+            if(document.getElementById('practiceVideo').srcObject)document.getElementById('practiceVideo').srcObject.getTracks().forEach(t=>t.stop());
+            document.getElementById('stopPracticeCamera').classList.add('hidden');
+            document.getElementById('startPracticeCamera').classList.remove('hidden');
         };
     </script>
 </body>
