@@ -331,7 +331,7 @@
         .camera-wrapper video {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             transform: scaleX(-1);
         }
         
@@ -341,6 +341,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            object-fit: contain;
             transform: scaleX(-1);
         }
         
@@ -873,7 +874,7 @@
             <!-- Instructions -->
             <div class="card" style="background: var(--gold-light); border-left: 4px solid var(--gold);">
                 <p style="font-size: 14px; color: var(--ink-light); margin: 0;">
-                    <strong>How to use:</strong> Hold each sign steady for 1 second to add a letter. 
+                    <strong>How to use:</strong> Hold each sign steady for ~2 seconds to add a letter. 
                     Use the Space button for word breaks, or make a flat open palm gesture.
                 </p>
             </div>
@@ -1073,8 +1074,8 @@
             pinky: []    // Landmark 20 - for J detection
         };
         
-        const TRAIL_MAX_LENGTH = 30;  // Number of points to keep
-        const TRAIL_FADE_TIME = 1200;  // ms before trail fades (longer for J motion)
+        const TRAIL_MAX_LENGTH = 60;  // Number of points to keep
+        const TRAIL_FADE_TIME = 2000;  // ms before trail fades (2 seconds for J motion)
         
         // Add a point to a finger's trail
         function addTrailPoint(finger, x, y, timestamp) {
@@ -1216,29 +1217,42 @@
         // Analyze trail for Z pattern (index draws: right, diagonal down-left, right)
         function detectZMotion() {
             const trail = fingerTrails.index;
-            if (trail.length < 12) return false;
+            if (trail.length < 8) return false;  // Reduced minimum
             
-            // Divide trail into thirds
-            const third = Math.floor(trail.length / 3);
-            const p1 = trail[0];
-            const p2 = trail[third];
-            const p3 = trail[third * 2];
-            const p4 = trail[trail.length - 1];
+            // Get key points from the trail
+            const start = trail[0];
+            const end = trail[trail.length - 1];
+            const mid = trail[Math.floor(trail.length / 2)];
             
-            // Z motion analysis:
-            // Segment 1 (p1->p2): mostly horizontal (right)
-            const seg1Horizontal = Math.abs(p2.y - p1.y) < 0.05;
-            const seg1Right = Math.abs(p2.x - p1.x) > 0.03;
+            // Z motion: should have overall horizontal movement with a diagonal section
+            // More lenient detection:
             
-            // Segment 2 (p2->p3): diagonal (down and left)
-            const seg2Down = p3.y > p2.y + 0.03;
-            const seg2Diagonal = Math.abs(p3.x - p2.x) > 0.02;
+            // Total horizontal movement
+            const totalHorizontal = Math.abs(end.x - start.x);
             
-            // Segment 3 (p3->p4): mostly horizontal (right)
-            const seg3Horizontal = Math.abs(p4.y - p3.y) < 0.05;
-            const seg3Right = Math.abs(p4.x - p3.x) > 0.03;
+            // There should be some vertical movement in the middle (the diagonal)
+            const hasVertical = Math.abs(end.y - start.y) > 0.02 || 
+                               Math.abs(mid.y - start.y) > 0.03;
             
-            return (seg1Horizontal || seg1Right) && seg2Down && (seg3Horizontal || seg3Right);
+            // The path should have some complexity (not just a straight line)
+            // Check if mid point deviates from straight line
+            const expectedMidY = (start.y + end.y) / 2;
+            const midDeviation = Math.abs(mid.y - expectedMidY);
+            
+            // Either: significant horizontal + vertical, OR clear deviation pattern
+            const pattern1 = totalHorizontal > 0.04 && hasVertical;
+            const pattern2 = midDeviation > 0.02 && totalHorizontal > 0.03;
+            
+            // Also accept if there's clear directional changes
+            const quarterLen = Math.floor(trail.length / 4);
+            if (trail.length >= 8) {
+                const q1 = trail[quarterLen];
+                const q3 = trail[quarterLen * 3];
+                const hasZigZag = (q1.y !== mid.y || q3.y !== mid.y) && totalHorizontal > 0.03;
+                return pattern1 || pattern2 || hasZigZag;
+            }
+            
+            return pattern1 || pattern2;
         }
         
         // Update trails based on current hand landmarks and hand state
@@ -1373,10 +1387,30 @@
             
             // ===== LETTERS =====
             
-            // A: Fist with thumb to the side (not tucked under)
+            // A: Fist with thumb prominently to the SIDE (not up, not tucked)
             if (id === 'a') {
-                return !indexExt && !middleExt && !ringExt && !pinkyExt && 
-                       thumb.thumbOutward && !thumb.thumbTucked;
+                const allFingersClosed = !indexExt && !middleExt && !ringExt && !pinkyExt;
+                
+                const thumbTip = landmarks[4];
+                const thumbIp = landmarks[3];
+                const indexMcp = landmarks[5];
+                const indexPip = landmarks[6];
+                const middlePip = landmarks[10];
+                
+                // KEY: Thumb is to the SIDE - horizontally offset from fingers
+                const thumbToSide = Math.abs(thumbTip.x - indexMcp.x) > 0.05;
+                
+                // Thumb should NOT be poking up above the index PIP (that's T)
+                const thumbNotAboveFist = thumbTip.y > indexPip.y - 0.04;
+                
+                // Thumb should NOT be between index and middle (that's T)
+                const thumbNotBetween = Math.abs(thumbTip.x - (indexPip.x + middlePip.x) / 2) > 0.04 ||
+                                        thumbTip.y > indexPip.y;
+                
+                // Thumb should be visible/extended, not completely tucked
+                const thumbVisible = landmarkDist(landmarks, 4, 2) > 0.05;
+                
+                return allFingersClosed && thumbToSide && thumbNotAboveFist && thumbVisible;
             }
             
             // B: Four fingers up, thumb tucked across palm
@@ -1399,10 +1433,24 @@
                        fingersTouching(landmarks, 12, 4, 0.08); // Middle touches thumb
             }
             
-            // E: All fingers curled down, thumb tucked
+            // E: All fingers curled, thumb tucked UNDER/across the fingers
             if (id === 'e') {
-                return indexCurled && middleCurled && ringCurled && pinkyCurled &&
-                       thumb.thumbTucked;
+                // E: Claw-like shape with all fingers curled, thumb tucked under them
+                const allFingersClosed = !indexExt && !middleExt && !ringExt && !pinkyExt;
+                
+                // Thumb should be tucked - close to or under the fingers
+                const thumbTip = landmarks[4];
+                const indexMcp = landmarks[5];
+                const indexPip = landmarks[6];
+                
+                // Thumb tip is under/behind the curled fingers
+                // Thumb y should be near or below the finger PIPs
+                const thumbTucked = thumbTip.y > indexPip.y - 0.02;
+                
+                // Thumb not sticking out to side
+                const thumbNotOut = Math.abs(thumbTip.x - indexMcp.x) < 0.06;
+                
+                return allFingersClosed && thumbTucked && thumbNotOut;
             }
             
             // F: Index+thumb touch (OK shape), other fingers up
@@ -1411,23 +1459,55 @@
                        middleExt && ringExt && pinkyExt;
             }
             
-            // G: Index + thumb pointing sideways (hand horizontal)
+            // G: Index extended with thumb also extended/visible, others closed
             if (id === 'g') {
-                // G is index extended with thumb out, hand pointing sideways
-                const isSideways = Math.abs(handAngle) > 25 && Math.abs(handAngle) < 155;
+                // G: Index pointing out, thumb also extended, others closed
+                const indexTip = landmarks[8];
+                const indexMcp = landmarks[5];
+                const thumbTip = landmarks[4];
                 
-                return indexExt && !middleExt && !ringExt && !pinkyExt &&
-                       thumb.thumbOutward && isSideways;
+                // Index extended outward
+                const indexOut = landmarkDist(landmarks, 8, 5) > landmarkDist(landmarks, 6, 5);
+                
+                // Thumb also extended (not tucked)
+                const thumbExtended = landmarkDist(landmarks, 4, 2) > 0.08;
+                
+                // Middle, ring, pinky closed
+                const middleDown = landmarks[12].y > landmarks[10].y - 0.02 || 
+                                   landmarkDist(landmarks, 12, 9) < landmarkDist(landmarks, 10, 9);
+                const ringDown = landmarks[16].y > landmarks[14].y - 0.02;
+                const pinkyDown = landmarks[20].y > landmarks[18].y - 0.02;
+                
+                // Index and thumb roughly parallel (for G shape)
+                const indexThumbClose = landmarkDist(landmarks, 8, 4) < 0.2;
+                
+                return indexOut && thumbExtended && middleDown && ringDown && pinkyDown;
             }
             
-            // H: Index + middle pointing sideways (hand horizontal)
+            // H: Index + middle extended together, pointing sideways
             if (id === 'h') {
-                // H is index+middle extended, pointing sideways, thumb tucked
-                // More lenient angle detection
-                const isSideways = Math.abs(handAngle) > 30 && Math.abs(handAngle) < 150;
+                // For H, detect index and middle extended and close together
+                // Don't rely on hand angle - just check finger extension pattern
+                const indexTip = landmarks[8];
+                const middleTip = landmarks[12];
+                const indexMcp = landmarks[5];
+                const middleMcp = landmarks[9];
                 
-                return indexExt && middleExt && !ringExt && !pinkyExt &&
-                       !thumb.thumbOutward && isSideways;
+                // Both fingers extended (tips away from MCPs)
+                const indexOut = landmarkDist(landmarks, 8, 5) > landmarkDist(landmarks, 6, 5);
+                const middleOut = landmarkDist(landmarks, 12, 9) > landmarkDist(landmarks, 10, 9);
+                
+                // Fingers close together
+                const fingersTogether = landmarkDist(landmarks, 8, 12) < 0.08;
+                
+                // Ring and pinky not extended
+                const ringDown = landmarks[16].y > landmarks[14].y - 0.02;
+                const pinkyDown = landmarks[20].y > landmarks[18].y - 0.02;
+                
+                // Thumb not prominently out
+                const thumbQuiet = landmarkDist(landmarks, 4, 5) < 0.15;
+                
+                return indexOut && middleOut && fingersTogether && ringDown && pinkyDown && thumbQuiet;
             }
             
             // I: Pinky up only
@@ -1481,53 +1561,130 @@
                        Math.abs(handAngle) < 45; // Hand pointing up
             }
             
-            // M: Fist with three fingers over thumb
+            // M: Fist with index, middle, ring fingers draped OVER the thumb
             if (id === 'm') {
-                return !indexExt && !middleExt && !ringExt && !pinkyExt &&
-                       thumb.thumbTucked &&
-                       landmarks[8].y > landmarks[4].y; // Index tip below thumb tip
-            }
-            
-            // N: Fist with thumb between index and middle (similar to T but thumb more visible)
-            if (id === 'n') {
-                // N: Closed fist, thumb tip visible between index and middle fingers
-                // All fingers should be closed
                 const allFingersClosed = !indexExt && !middleExt && !ringExt && !pinkyExt;
                 
-                // Thumb should be somewhat visible (not fully tucked under)
-                const thumbVisible = landmarks[4].y < landmarks[8].y + 0.03;
+                const thumbTip = landmarks[4];
+                const indexTip = landmarks[8];
+                const middleTip = landmarks[12];
+                const ringTip = landmarks[16];
+                const pinkyTip = landmarks[20];
+                const indexPip = landmarks[6];
                 
-                // Simplified: just a closed fist with thumb positioned forward
-                // Distinguish from M by thumb position relative to ring finger
-                const thumbNotUnderRing = landmarks[4].x < landmarks[16].x + 0.05 || 
-                                          landmarks[4].x > landmarks[16].x - 0.05;
+                // KEY for M: THREE fingertips (index, middle, ring) are BELOW thumb tip
+                // (fingers draped over thumb)
+                const indexOverThumb = indexTip.y > thumbTip.y - 0.02;
+                const middleOverThumb = middleTip.y > thumbTip.y - 0.02;
+                const ringOverThumb = ringTip.y > thumbTip.y - 0.02;
                 
-                return allFingersClosed && thumbVisible;
+                // Pinky should NOT be over thumb (that distinguishes from just a fist)
+                // Actually in M, pinky is also tucked but separately
+                
+                // Thumb should be somewhat tucked (not sticking out to side)
+                const thumbNotToSide = Math.abs(thumbTip.x - landmarks[5].x) < 0.07;
+                
+                // Thumb should not be poking up above fist
+                const thumbNotUp = thumbTip.y > indexPip.y - 0.03;
+                
+                return allFingersClosed && indexOverThumb && middleOverThumb && ringOverThumb && 
+                       thumbNotToSide && thumbNotUp;
             }
             
-            // O: Fingertips touch thumb (circle)
+            // N: Fist with index and middle fingers draped OVER thumb (only 2 fingers, not 3)
+            if (id === 'n') {
+                const allFingersClosed = !indexExt && !middleExt && !ringExt && !pinkyExt;
+                
+                const thumbTip = landmarks[4];
+                const indexTip = landmarks[8];
+                const middleTip = landmarks[12];
+                const ringTip = landmarks[16];
+                const indexPip = landmarks[6];
+                
+                // KEY for N: TWO fingertips (index, middle) are BELOW/over thumb tip
+                const indexOverThumb = indexTip.y > thumbTip.y - 0.02;
+                const middleOverThumb = middleTip.y > thumbTip.y - 0.02;
+                
+                // Ring finger should NOT be over thumb (this distinguishes N from M)
+                const ringNotOverThumb = ringTip.y < thumbTip.y + 0.02;
+                
+                // Thumb should not be to the side (that's A)
+                const thumbNotToSide = Math.abs(thumbTip.x - landmarks[5].x) < 0.07;
+                
+                // Thumb not poking up (that's T)
+                const thumbNotUp = thumbTip.y > indexPip.y - 0.02;
+                
+                return allFingersClosed && indexOverThumb && middleOverThumb && 
+                       ringNotOverThumb && thumbNotToSide && thumbNotUp;
+            }
+            
+            // O: Fingertips curl to touch thumb tip, forming a circle
             if (id === 'o') {
-                return fingersTouching(landmarks, 8, 4, 0.07) &&
-                       fingersTouching(landmarks, 12, 4, 0.09) &&
-                       !pinkyExt;
+                const thumbTip = landmarks[4];
+                const indexTip = landmarks[8];
+                const middleTip = landmarks[12];
+                
+                // KEY for O: Fingertips are CLOSE to thumb tip (touching to form circle)
+                const indexTouchesThumb = landmarkDist(landmarks, 8, 4) < 0.08;
+                const middleTouchesThumb = landmarkDist(landmarks, 12, 4) < 0.10;
+                
+                // Fingers should be curved, not straight
+                const fingersCurved = !indexExt && !middleExt;
+                
+                // This should NOT trigger for M/N where fingers are OVER thumb
+                // In O, the fingertips are at roughly same Y level as thumb (forming circle)
+                const fingersNotOverThumb = indexTip.y < thumbTip.y + 0.05;
+                
+                return indexTouchesThumb && fingersCurved && fingersNotOverThumb;
             }
             
-            // P: Index + middle extended, hand pointing down
+            // P: Index + middle extended, pointing downward
             if (id === 'p') {
-                // P is like K but pointing downward
-                // Hand angle > 90 or < -90 means pointing down
-                const isPointingDown = handAngle > 80 || handAngle < -80;
+                // P: Two fingers out, hand oriented so fingers point down
+                // Key: fingertips should be BELOW the wrist or MCPs
+                const indexTip = landmarks[8];
+                const middleTip = landmarks[12];
+                const wrist = landmarks[0];
+                const indexMcp = landmarks[5];
                 
-                return indexExt && middleExt && !ringExt && !pinkyExt && isPointingDown;
+                // Fingers extended
+                const indexOut = landmarkDist(landmarks, 8, 5) > landmarkDist(landmarks, 6, 5) * 0.8;
+                const middleOut = landmarkDist(landmarks, 12, 9) > landmarkDist(landmarks, 10, 9) * 0.8;
+                
+                // Pointing down: fingertips below MCPs
+                const tipsBelow = indexTip.y > indexMcp.y && middleTip.y > landmarks[9].y;
+                
+                // Or: fingertips lower than wrist (hand inverted)
+                const belowWrist = indexTip.y > wrist.y - 0.05;
+                
+                // Ring and pinky closed
+                const ringDown = !ringExt;
+                const pinkyDown = !pinkyExt;
+                
+                return indexOut && middleOut && (tipsBelow || belowWrist) && ringDown && pinkyDown;
             }
             
-            // Q: Index + thumb extended, hand pointing down
+            // Q: Index + thumb pointing downward
             if (id === 'q') {
-                // Q is like G but pointing downward
-                const isPointingDown = handAngle > 80 || handAngle < -80;
+                // Q: Like G but pointing down - index and thumb out, pointing down
+                const indexTip = landmarks[8];
+                const thumbTip = landmarks[4];
+                const wrist = landmarks[0];
+                const indexMcp = landmarks[5];
                 
-                return indexExt && !middleExt && !ringExt && !pinkyExt &&
-                       thumb.thumbOutward && isPointingDown;
+                // Index extended
+                const indexOut = landmarkDist(landmarks, 8, 5) > landmarkDist(landmarks, 6, 5) * 0.8;
+                
+                // Thumb extended
+                const thumbOut = landmarkDist(landmarks, 4, 2) > 0.08;
+                
+                // Pointing down: index tip below MCP or wrist
+                const pointingDown = indexTip.y > indexMcp.y || indexTip.y > wrist.y - 0.05;
+                
+                // Other fingers closed
+                const othersDown = !middleExt && !ringExt && !pinkyExt;
+                
+                return indexOut && thumbOut && pointingDown && othersDown;
             }
             
             // R: Index and middle crossed
@@ -1555,10 +1712,28 @@
                 return allFingersClosed && thumbNotOut;
             }
             
-            // T: Fist with thumb between index and middle
+            // T: Fist with thumb poking UP between index and middle fingers
             if (id === 't') {
-                return !indexExt && !middleExt && !ringExt && !pinkyExt &&
-                       thumb.thumbBetweenIM;
+                const allFingersClosed = !indexExt && !middleExt && !ringExt && !pinkyExt;
+                
+                const thumbTip = landmarks[4];
+                const indexPip = landmarks[6];
+                const indexTip = landmarks[8];
+                const middlePip = landmarks[10];
+                const middleTip = landmarks[12];
+                
+                // KEY: Thumb tip must be ABOVE the index PIP (poking up from fist)
+                const thumbAboveFist = thumbTip.y < indexPip.y - 0.01;
+                
+                // Thumb should be between index and middle horizontally
+                const minX = Math.min(indexPip.x, middlePip.x);
+                const maxX = Math.max(indexPip.x, middlePip.x);
+                const thumbBetweenFingers = thumbTip.x >= minX - 0.04 && thumbTip.x <= maxX + 0.04;
+                
+                // Thumb should also be higher than the fingertips (which are curled)
+                const thumbHigherThanTips = thumbTip.y < indexTip.y && thumbTip.y < middleTip.y;
+                
+                return allFingersClosed && thumbAboveFist && thumbBetweenFingers;
             }
             
             // U: Index + middle up together (not spread)
@@ -1986,17 +2161,40 @@
         });
         
 
+
+        // Detect open palm gesture (for adding space)
+        function detectOpenPalm(landmarks) {
+            if (!landmarks) return false;
+            
+            // All five digits should be extended and spread
+            const thumbOut = landmarkDist(landmarks, 4, 2) > 0.08;
+            const indexUp = landmarks[8].y < landmarks[6].y - 0.02;
+            const middleUp = landmarks[12].y < landmarks[10].y - 0.02;
+            const ringUp = landmarks[16].y < landmarks[14].y - 0.02;
+            const pinkyUp = landmarks[20].y < landmarks[18].y - 0.02;
+            
+            // Fingers should be spread apart
+            const spread1 = landmarkDist(landmarks, 8, 12) > 0.04;
+            const spread2 = landmarkDist(landmarks, 12, 16) > 0.03;
+            const spread3 = landmarkDist(landmarks, 16, 20) > 0.03;
+            
+            return thumbOut && indexUp && middleUp && ringUp && pinkyUp && 
+                   spread1 && spread2 && spread3;
+        }
+
         // ============ TRANSLATE MODE ============
         let translateCameraActive = false;
         let translatedText = '';
         let currentDetectedSign = null;
         let signStartTime = 0;
         let lastConfirmedSign = null;
-        let confirmationThreshold = 1000; // 1 second to confirm a letter
-        let cooldownTime = 500; // 0.5s cooldown after confirming
+        let confirmationThreshold = 2000; // 2 seconds to confirm a letter
+        let cooldownTime = 800; // 0.8s cooldown after confirming
         let lastConfirmTime = 0;
         let consecutiveDetections = 0;
-        let requiredConsecutive = 5; // Need 5 consistent detections
+        let requiredConsecutive = 8; // Need 8 consistent detections
+        let graceFrames = 0; // Allow brief detection gaps
+        let maxGraceFrames = 5; // Up to 5 frames of "no detection" allowed
         
         // Build the quick reference grid for translate mode
         function buildTranslateReference() {
@@ -2073,10 +2271,41 @@
                     return;
                 }
                 
+                // First check for open palm (space gesture)
+                if (detectOpenPalm(landmarks)) {
+                    overlay.textContent = '␣';
+                    overlay.classList.add('active');
+                    ring.classList.add('active');
+                    
+                    if (currentDetectedSign && currentDetectedSign.id === 'space') {
+                        consecutiveDetections++;
+                        const elapsed = now - signStartTime;
+                        const progress = Math.min(elapsed / confirmationThreshold, 1);
+                        const circumference = 163.36;
+                        ringProgress.style.strokeDashoffset = circumference * (1 - progress);
+                        
+                        if (elapsed >= confirmationThreshold && consecutiveDetections >= requiredConsecutive) {
+                            if (lastConfirmedSign !== 'space') {
+                                translatedText += ' ';
+                                updateTranslationDisplay();
+                                lastConfirmedSign = 'space';
+                                lastConfirmTime = now;
+                                ringProgress.style.strokeDashoffset = circumference;
+                            }
+                        }
+                    } else {
+                        currentDetectedSign = {id: 'space', name: ' '};
+                        signStartTime = now;
+                        consecutiveDetections = 1;
+                        lastConfirmedSign = null;
+                    }
+                    return;
+                }
+                
                 // Try to detect which sign is being made
                 let detectedSign = null;
                 for (const sign of SIGNS) {
-                    if (sign.type === 'letter' && detectSign(results.multiHandLandmarks[0], sign)) {
+                    if (sign.type === 'letter' && detectSign(landmarks, sign)) {
                         detectedSign = sign;
                         break;
                     }
@@ -2087,33 +2316,40 @@
                     overlay.textContent = detectedSign.name;
                     overlay.classList.add('active');
                     ring.classList.add('active');
+                    graceFrames = 0; // Reset grace counter
                     
-                    // Check if same sign as before
-                    if (currentDetectedSign && currentDetectedSign.id === detectedSign.id) {
+                    // Check if same sign as before (or no previous sign)
+                    if (!currentDetectedSign || currentDetectedSign.id === detectedSign.id) {
+                        if (!currentDetectedSign) {
+                            currentDetectedSign = detectedSign;
+                            signStartTime = now;
+                            consecutiveDetections = 0;
+                        }
                         consecutiveDetections++;
                         
-                        // Calculate progress
+                        // Calculate progress based on time
                         const elapsed = now - signStartTime;
                         const progress = Math.min(elapsed / confirmationThreshold, 1);
                         
-                        // Update ring progress (circumference = 2 * PI * 26 ≈ 163.36)
+                        // Update ring progress
                         const circumference = 163.36;
                         const offset = circumference * (1 - progress);
                         ringProgress.style.strokeDashoffset = offset;
                         
-                        // Confirm if held long enough with consistent detection
+                        // Confirm if held long enough
                         if (elapsed >= confirmationThreshold && consecutiveDetections >= requiredConsecutive) {
                             if (lastConfirmedSign !== detectedSign.id) {
                                 addLetterToTranslation(detectedSign.name);
                                 lastConfirmedSign = detectedSign.id;
                                 lastConfirmTime = now;
-                                
-                                // Reset for next letter
                                 ringProgress.style.strokeDashoffset = circumference;
+                                // Reset for next letter
+                                currentDetectedSign = null;
+                                consecutiveDetections = 0;
                             }
                         }
                     } else {
-                        // New sign detected, reset timer
+                        // Different sign detected - reset
                         currentDetectedSign = detectedSign;
                         signStartTime = now;
                         consecutiveDetections = 1;
@@ -2121,12 +2357,17 @@
                         ringProgress.style.strokeDashoffset = 163.36;
                     }
                 } else {
-                    // No sign detected, reset
-                    overlay.classList.remove('active');
-                    ring.classList.remove('active');
-                    currentDetectedSign = null;
-                    consecutiveDetections = 0;
-                    ringProgress.style.strokeDashoffset = 163.36;
+                    // No sign detected - use grace period before resetting
+                    graceFrames++;
+                    if (graceFrames > maxGraceFrames) {
+                        // Grace period exceeded, reset
+                        overlay.classList.remove('active');
+                        ring.classList.remove('active');
+                        currentDetectedSign = null;
+                        consecutiveDetections = 0;
+                        ringProgress.style.strokeDashoffset = 163.36;
+                    }
+                    // Otherwise keep the current state (grace period active)
                 }
             } else {
                 // No hand detected
