@@ -900,6 +900,54 @@
             return patterns[targetSign.id] || false;
         }
         
+
+        // Draw hand landmarks and connections
+        function drawHand(ctx, landmarks, width, height) {
+            if (!landmarks) return;
+            
+            // MediaPipe hand connections
+            const connections = [
+                [0, 1], [1, 2], [2, 3], [3, 4],           // Thumb
+                [0, 5], [5, 6], [6, 7], [7, 8],           // Index
+                [0, 9], [9, 10], [10, 11], [11, 12],      // Middle
+                [0, 13], [13, 14], [14, 15], [15, 16],    // Ring
+                [0, 17], [17, 18], [18, 19], [19, 20],    // Pinky
+                [5, 9], [9, 13], [13, 17]                  // Palm
+            ];
+            
+            // Draw connections (green lines)
+            ctx.strokeStyle = '#00FF00';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            
+            connections.forEach(([i, j]) => {
+                const start = landmarks[i];
+                const end = landmarks[j];
+                ctx.beginPath();
+                ctx.moveTo(start.x * width, start.y * height);
+                ctx.lineTo(end.x * width, end.y * height);
+                ctx.stroke();
+            });
+            
+            // Draw landmarks (green dots with white center)
+            landmarks.forEach((landmark, i) => {
+                const x = landmark.x * width;
+                const y = landmark.y * height;
+                
+                // Outer circle (green)
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = '#00FF00';
+                ctx.fill();
+                
+                // Inner circle (white)
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fill();
+            });
+        }
+
         // Camera handling - Test Mode
         function onTestResults(results) {
             const canvas = document.getElementById('testCanvas');
@@ -909,6 +957,11 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw hand skeleton if detected
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                drawHand(ctx, results.multiHandLandmarks[0], canvas.width, canvas.height);
+            }
             
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0 && testSign) {
                 if (detectSign(results.multiHandLandmarks[0], testSign)) {
@@ -936,6 +989,11 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw hand skeleton if detected
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                drawHand(ctx, results.multiHandLandmarks[0], canvas.width, canvas.height);
+            }
             
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0 && practiceSign) {
                 if (detectSign(results.multiHandLandmarks[0], practiceSign)) {
