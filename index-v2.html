@@ -1019,70 +1019,132 @@
         
         // Start/Stop camera functions
         async function startCamera(mode) {
+            const video = document.getElementById(mode + 'Video');
+            const canvas = document.getElementById(mode + 'Canvas');
+            const btn = document.getElementById(mode + 'CameraBtn');
+            const placeholder = document.getElementById(mode + 'Placeholder');
+            
+            // Update UI to show loading
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+            
             try {
-                hands = new Hands({
-                    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
-                });
-                hands.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.7,
-                    minTrackingConfidence: 0.7
-                });
-                hands.onResults(mode === 'test' ? onTestResults : onPracticeResults);
+                console.log('Starting camera for mode:', mode);
                 
-                const video = document.getElementById(mode + 'Video');
+                // Get camera stream first
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: 640, height: 480 }
+                    video: { 
+                        facingMode: 'user', 
+                        width: { ideal: 640 }, 
+                        height: { ideal: 480 } 
+                    }
                 });
                 video.srcObject = stream;
                 
-                const camera = new Camera(video, {
-                    onFrame: async () => {
-                        await hands.send({ image: video });
-                    },
-                    width: 640,
-                    height: 480
+                // Wait for video to be ready
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        resolve();
+                    };
                 });
-                await camera.start();
                 
+                console.log('Video ready:', video.videoWidth, 'x', video.videoHeight);
+                
+                // Initialize MediaPipe Hands
+                const handsInstance = new Hands({
+                    locateFile: (file) => {
+                        console.log('Loading MediaPipe file:', file);
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                    }
+                });
+                
+                handsInstance.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                handsInstance.onResults((results) => {
+                    if (mode === 'test') {
+                        onTestResults(results);
+                    } else {
+                        onPracticeResults(results);
+                    }
+                });
+                
+                // Wait for MediaPipe to initialize
+                await handsInstance.initialize();
+                console.log('MediaPipe Hands initialized');
+                
+                // Store the hands instance
+                hands = handsInstance;
+                
+                // Set up the processing loop
+                const processFrame = async () => {
+                    if ((mode === 'test' && testCameraActive) || (mode === 'practice' && practiceCameraActive)) {
+                        if (video.readyState >= 2) {
+                            await hands.send({ image: video });
+                        }
+                        requestAnimationFrame(processFrame);
+                    }
+                };
+                
+                // Update state and UI
                 if (mode === 'test') {
-                    testCamera = camera;
                     testCameraActive = true;
-                    document.getElementById('testPlaceholder').style.display = 'none';
-                    document.getElementById('testCameraBtn').textContent = 'Stop Camera';
-                    document.getElementById('testCameraBtn').classList.add('active');
                 } else {
-                    practiceCamera = camera;
                     practiceCameraActive = true;
-                    document.getElementById('practicePlaceholder').style.display = 'none';
-                    document.getElementById('practiceCameraBtn').textContent = 'Stop Camera';
-                    document.getElementById('practiceCameraBtn').classList.add('active');
                 }
+                
+                placeholder.style.display = 'none';
+                btn.textContent = 'Stop Camera';
+                btn.disabled = false;
+                btn.classList.add('active');
+                
+                // Start processing frames
+                processFrame();
+                
+                console.log('Camera started successfully');
+                
             } catch (e) {
+                console.error('Camera error:', e);
+                btn.textContent = 'Start Camera';
+                btn.disabled = false;
                 alert('Camera error: ' + e.message);
             }
         }
         
         function stopCamera(mode) {
+            console.log('Stopping camera for mode:', mode);
+            
             const video = document.getElementById(mode + 'Video');
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(t => t.stop());
+            const btn = document.getElementById(mode + 'CameraBtn');
+            const placeholder = document.getElementById(mode + 'Placeholder');
+            
+            // Stop the camera active flag first to stop the processing loop
+            if (mode === 'test') {
+                testCameraActive = false;
+            } else {
+                practiceCameraActive = false;
             }
             
-            if (mode === 'test') {
-                if (testCamera) testCamera.stop();
-                testCameraActive = false;
-                document.getElementById('testPlaceholder').style.display = 'flex';
-                document.getElementById('testCameraBtn').textContent = 'Start Camera';
-                document.getElementById('testCameraBtn').classList.remove('active');
-            } else {
-                if (practiceCamera) practiceCamera.stop();
-                practiceCameraActive = false;
-                document.getElementById('practicePlaceholder').style.display = 'flex';
-                document.getElementById('practiceCameraBtn').textContent = 'Start Camera';
-                document.getElementById('practiceCameraBtn').classList.remove('active');
+            // Stop video stream
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
             }
+            
+            // Clear the canvas
+            const canvas = document.getElementById(mode + 'Canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update UI
+            placeholder.style.display = 'flex';
+            btn.textContent = 'Start Camera';
+            btn.classList.remove('active');
         }
         
         document.getElementById('testCameraBtn').addEventListener('click', () => {
