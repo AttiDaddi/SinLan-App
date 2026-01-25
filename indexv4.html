@@ -1009,7 +1009,7 @@
                     <span class="performance-toggle-desc">Enable for signs like Mother/Father (slower)</span>
                 </div>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="testSkeletonToggle" checked>
+                    <input type="checkbox" id="testSkeletonToggle">
                     <span class="toggle-slider"></span>
                 </label>
             </div>
@@ -1073,7 +1073,7 @@
                     <span class="performance-toggle-desc">Enable for signs like Mother/Father (slower)</span>
                 </div>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="practiceSkeletonToggle" checked>
+                    <input type="checkbox" id="practiceSkeletonToggle">
                     <span class="toggle-slider"></span>
                 </label>
             </div>
@@ -1498,7 +1498,7 @@
         let holistic = null;
         let currentFaceLandmarks = null;
         let currentPoseLandmarks = null;
-        let useHolisticMode = true; // Enable body skeleton detection
+        let useHolisticMode = false; // Default OFF for better performance
 
         // Performance optimization settings
         let frameSkipCount = 0;
@@ -3469,23 +3469,16 @@
             if (testToggle) testToggle.checked = enabled;
             if (practiceToggle) practiceToggle.checked = enabled;
 
-            // If camera is active, notify user to restart
-            if (testCameraActive || practiceCameraActive) {
-                const msg = enabled
-                    ? 'Body skeleton enabled. Restart camera to apply.'
-                    : 'Fast mode enabled. Restart camera to apply.';
-                console.log(msg);
-                // Update feedback banner if visible
-                const testFb = document.getElementById('testFeedback');
-                const practiceFb = document.getElementById('practiceFeedback');
-                if (testCameraActive && testFb) {
-                    testFb.textContent = msg;
-                    testFb.className = 'feedback-banner prompt';
-                }
-                if (practiceCameraActive && practiceFb) {
-                    practiceFb.textContent = msg;
-                    practiceFb.className = 'feedback-banner prompt';
-                }
+            // If camera is active, automatically restart it with new mode
+            if (testCameraActive) {
+                console.log('Restarting test camera with new mode...');
+                stopCamera('test');
+                setTimeout(() => startCamera('test'), 300);
+            }
+            if (practiceCameraActive) {
+                console.log('Restarting practice camera with new mode...');
+                stopCamera('practice');
+                setTimeout(() => startCamera('practice'), 300);
             }
         }
 
