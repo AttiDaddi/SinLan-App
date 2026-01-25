@@ -175,9 +175,12 @@
         .sign-image {
             width: 288px;
             height: 288px;
-            object-fit: contain;
+            object-fit: cover;
+            object-position: center 25%;
             margin: 0 auto 12px;
             filter: contrast(1.1);
+            /* Crop to hide text that may appear in image */
+            clip-path: inset(0 0 12% 0);
         }
         
         .sign-letter {
@@ -471,7 +474,10 @@
         .sign-tile img {
             width: 100%;
             height: 70%;
-            object-fit: contain;
+            object-fit: cover;
+            object-position: center 30%;
+            /* Crop to hide text that may appear in image */
+            clip-path: inset(0 0 15% 0);
         }
         
         .sign-tile-label {
@@ -480,7 +486,60 @@
             color: var(--ink);
             margin-top: 2px;
         }
-        
+
+        /* Vocabulary Tiles (for words without hand images) */
+        .vocab-tile {
+            min-height: 80px;
+        }
+
+        .vocab-icon {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .vocab-tile .sign-tile-label {
+            font-size: 10px;
+            text-align: center;
+            word-wrap: break-word;
+            max-width: 100%;
+        }
+
+        /* Camera Info Box */
+        .camera-info-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F0F7FF 100%);
+            border: 1px solid #B8D4E8;
+            border-left: 4px solid #4A90D9;
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-bottom: 16px;
+        }
+
+        .camera-info-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .camera-info-text {
+            font-size: 13px;
+            color: var(--ink-light);
+            line-height: 1.5;
+        }
+
+        .camera-info-text strong {
+            display: block;
+            font-size: 14px;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .camera-info-text p {
+            margin: 0;
+        }
+
         /* Section Dividers */
         .section-label {
             font-size: 11px;
@@ -676,7 +735,9 @@
         #translateReference .sign-tile img {
             height: 55px;
             width: auto;
-            object-fit: contain;
+            object-fit: cover;
+            object-position: center 30%;
+            clip-path: inset(0 0 15% 0);
         }
         
         #translateReference .sign-tile-label {
@@ -855,7 +916,16 @@
                     <div class="stat-label">Total</div>
                 </div>
             </div>
-            
+
+            <!-- Camera Info Box -->
+            <div class="camera-info-box">
+                <span class="camera-info-icon">ℹ️</span>
+                <div class="camera-info-text">
+                    <strong>Why enable camera?</strong>
+                    <p>The camera uses hand-tracking technology to detect your hand positions and recognize the ASL signs you're making. Your video is processed locally and never stored or sent anywhere.</p>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="camera-wrapper">
                     <video id="testVideo" autoplay playsinline></video>
@@ -865,7 +935,7 @@
                         <span>Camera off</span>
                     </div>
                 </div>
-                
+
                 <button class="btn btn-camera" id="testCameraBtn" style="width: 100%; margin-bottom: 16px;">
                     Start Camera
                 </button>
@@ -896,6 +966,15 @@
                 <div class="stat-card">
                     <div class="stat-value" id="practiceAttempts">0</div>
                     <div class="stat-label">Attempts</div>
+                </div>
+            </div>
+
+            <!-- Camera Info Box -->
+            <div class="camera-info-box">
+                <span class="camera-info-icon">ℹ️</span>
+                <div class="camera-info-text">
+                    <strong>Why enable camera?</strong>
+                    <p>The camera uses hand-tracking technology to detect your hand positions and recognize the ASL signs you're making. Your video is processed locally and never stored or sent anywhere.</p>
                 </div>
             </div>
             
@@ -931,9 +1010,24 @@
             
             <p class="section-label">Alphabet</p>
             <div class="sign-grid" id="alphabetGrid"></div>
-            
+
             <p class="section-label">Numbers</p>
             <div class="sign-grid" id="numbersGrid"></div>
+
+            <p class="section-label">Family</p>
+            <div class="sign-grid" id="familyGrid"></div>
+
+            <p class="section-label">Colors</p>
+            <div class="sign-grid" id="colorsGrid"></div>
+
+            <p class="section-label">Days of the Week</p>
+            <div class="sign-grid" id="daysGrid"></div>
+
+            <p class="section-label">Seasons</p>
+            <div class="sign-grid" id="seasonsGrid"></div>
+
+            <p class="section-label">Holidays</p>
+            <div class="sign-grid" id="holidaysGrid"></div>
         </section>
 
         <!-- PHRASES MODE -->
@@ -1070,7 +1164,63 @@
             {id: '6', name: '6', type: 'number', desc: 'Pinky touches thumb', steps: ['Extend middle, ring, index up', 'Touch pinky to thumb', 'Forms a circle below']},
             {id: '7', name: '7', type: 'number', desc: 'Ring finger touches thumb', steps: ['Extend index, middle, pinky up', 'Touch ring to thumb', 'Three fingers up']},
             {id: '8', name: '8', type: 'number', desc: 'Middle finger touches thumb', steps: ['Extend index, ring, pinky up', 'Touch middle to thumb', 'Three fingers up']},
-            {id: '9', name: '9', type: 'number', desc: 'Index touches thumb', steps: ['Extend middle, ring, pinky up', 'Touch index to thumb', 'Like OK with fingers up']}
+            {id: '9', name: '9', type: 'number', desc: 'Index touches thumb', steps: ['Extend middle, ring, pinky up', 'Touch index to thumb', 'Like OK with fingers up']},
+
+            // Family
+            {id: 'mother', name: 'Mother', type: 'family', desc: 'Thumb on chin, open hand', steps: ['Open hand with fingers spread', 'Touch thumb to chin', 'Keep palm facing left']},
+            {id: 'father', name: 'Father', type: 'family', desc: 'Thumb on forehead, open hand', steps: ['Open hand with fingers spread', 'Touch thumb to forehead', 'Keep palm facing left']},
+            {id: 'sister', name: 'Sister', type: 'family', desc: 'A-hand from chin, then 1-hands together', steps: ['Start with A-hand at chin', 'Move down to index fingers together', 'Both hands point forward']},
+            {id: 'brother', name: 'Brother', type: 'family', desc: 'A-hand from forehead, then 1-hands together', steps: ['Start with A-hand at forehead', 'Move down to index fingers together', 'Both hands point forward']},
+            {id: 'baby', name: 'Baby', type: 'family', desc: 'Rock arms like holding baby', steps: ['Place one arm over the other', 'Rock arms side to side', 'Like cradling a baby']},
+            {id: 'family', name: 'Family', type: 'family', desc: 'F-hands circle outward', steps: ['Both hands in F shape', 'Start together in front', 'Circle outward to meet again']},
+            {id: 'grandmother', name: 'Grandmother', type: 'family', desc: 'Mother sign with two bounces forward', steps: ['Do the mother sign (thumb on chin)', 'Bounce hand forward twice', 'Shows generational distance']},
+            {id: 'grandfather', name: 'Grandfather', type: 'family', desc: 'Father sign with two bounces forward', steps: ['Do the father sign (thumb on forehead)', 'Bounce hand forward twice', 'Shows generational distance']},
+
+            // Colors
+            {id: 'red', name: 'Red', type: 'color', desc: 'Index finger brushes down lips', steps: ['Point index finger', 'Touch to lips', 'Brush downward once or twice']},
+            {id: 'blue', name: 'Blue', type: 'color', desc: 'B-hand shakes side to side', steps: ['Make B handshape', 'Shake hand side to side', 'Palm faces outward']},
+            {id: 'green', name: 'Green', type: 'color', desc: 'G-hand shakes side to side', steps: ['Make G handshape', 'Shake hand side to side', 'Twist at wrist']},
+            {id: 'yellow', name: 'Yellow', type: 'color', desc: 'Y-hand shakes side to side', steps: ['Make Y handshape (pinky and thumb out)', 'Shake hand side to side', 'Twist at wrist']},
+            {id: 'orange', name: 'Orange', type: 'color', desc: 'S-hand squeezes at chin', steps: ['Make S handshape (fist)', 'Place near chin', 'Squeeze open and closed']},
+            {id: 'purple', name: 'Purple', type: 'color', desc: 'P-hand shakes side to side', steps: ['Make P handshape', 'Shake hand side to side', 'Twist at wrist']},
+            {id: 'black', name: 'Black', type: 'color', desc: 'Index finger draws across forehead', steps: ['Extend index finger', 'Draw across forehead', 'From one side to the other']},
+            {id: 'white', name: 'White', type: 'color', desc: 'Open hand pulls from chest', steps: ['Place open hand on chest', 'Pull hand away', 'Close fingers as you pull']},
+            {id: 'pink', name: 'Pink', type: 'color', desc: 'P-hand brushes down lips', steps: ['Make P handshape', 'Middle finger touches lips', 'Brush downward']},
+            {id: 'brown', name: 'Brown', type: 'color', desc: 'B-hand slides down cheek', steps: ['Make B handshape', 'Place on cheek', 'Slide downward']},
+
+            // Days of the Week
+            {id: 'monday', name: 'Monday', type: 'day', desc: 'M-hand circles', steps: ['Make M handshape', 'Small circle motion', 'Palm faces you']},
+            {id: 'tuesday', name: 'Tuesday', type: 'day', desc: 'T-hand circles', steps: ['Make T handshape', 'Small circle motion', 'Palm faces you']},
+            {id: 'wednesday', name: 'Wednesday', type: 'day', desc: 'W-hand circles', steps: ['Make W handshape (3 fingers up)', 'Small circle motion', 'Palm faces you']},
+            {id: 'thursday', name: 'Thursday', type: 'day', desc: 'H-hand circles (or TH)', steps: ['Make H handshape', 'Small circle motion', 'Some use T-H combination']},
+            {id: 'friday', name: 'Friday', type: 'day', desc: 'F-hand circles', steps: ['Make F handshape', 'Small circle motion', 'Palm faces you']},
+            {id: 'saturday', name: 'Saturday', type: 'day', desc: 'S-hand circles', steps: ['Make S handshape (fist)', 'Small circle motion', 'Palm faces you']},
+            {id: 'sunday', name: 'Sunday', type: 'day', desc: 'Both open hands push outward', steps: ['Both hands open, palms out', 'Push outward and down', 'Peaceful, calm motion']},
+            {id: 'today', name: 'Today', type: 'day', desc: 'Y-hands drop down', steps: ['Both hands in Y shape', 'Start at shoulder height', 'Drop down together']},
+            {id: 'tomorrow', name: 'Tomorrow', type: 'day', desc: 'Thumb on cheek moves forward', steps: ['A-hand with thumb up', 'Touch thumb to cheek', 'Arc forward']},
+            {id: 'yesterday', name: 'Yesterday', type: 'day', desc: 'Thumb touches cheek then chin', steps: ['A-hand or Y-hand', 'Touch thumb to cheek', 'Then touch to chin']},
+
+            // Seasons
+            {id: 'spring', name: 'Spring', type: 'season', desc: 'Hand pushes through other hand like plant growing', steps: ['Non-dominant hand in C shape', 'Dominant hand pushes up through', 'Like a plant sprouting']},
+            {id: 'summer', name: 'Summer', type: 'season', desc: 'Index finger wipes across forehead', steps: ['Extend index finger', 'Draw across forehead', 'Like wiping sweat']},
+            {id: 'fall', name: 'Fall/Autumn', type: 'season', desc: 'Flat hand brushes down forearm', steps: ['Hold non-dominant arm up', 'Brush dominant hand down arm', 'Like leaves falling']},
+            {id: 'winter', name: 'Winter', type: 'season', desc: 'W-hands or fists shake (shivering)', steps: ['Both hands in W or S shape', 'Hold in front of body', 'Shake like shivering from cold']},
+            {id: 'weather', name: 'Weather', type: 'season', desc: 'W-hands twist down', steps: ['Both hands in W shape', 'Start at top', 'Twist and move downward']},
+            {id: 'hot', name: 'Hot', type: 'season', desc: 'Claw hand pulls away from mouth', steps: ['Claw hand at mouth', 'Pull away and turn', 'Like something too hot to eat']},
+            {id: 'cold', name: 'Cold', type: 'season', desc: 'Fists shake near shoulders', steps: ['Both hands in fists', 'Hold near shoulders', 'Shake like shivering']},
+            {id: 'rain', name: 'Rain', type: 'season', desc: 'Claw hands move down repeatedly', steps: ['Both hands in claw shape', 'Move down repeatedly', 'Like rain falling']},
+            {id: 'snow', name: 'Snow', type: 'season', desc: 'Fingers wiggle while hands float down', steps: ['Open hands with spread fingers', 'Wiggle fingers', 'Float hands downward']},
+            {id: 'sun', name: 'Sun', type: 'season', desc: 'C-hand at side of head opens', steps: ['C-hand near side of head', 'Open hand outward', 'Like rays of sun']},
+
+            // Holidays
+            {id: 'christmas', name: 'Christmas', type: 'holiday', desc: 'C-hand arcs from elbow', steps: ['Make C handshape', 'Place at elbow of other arm', 'Arc downward']},
+            {id: 'thanksgiving', name: 'Thanksgiving', type: 'holiday', desc: 'Both hands at chin move forward', steps: ['Flat hands touch chin', 'Move outward and down', 'Like giving thanks']},
+            {id: 'halloween', name: 'Halloween', type: 'holiday', desc: 'Both hands cover then reveal face', steps: ['Cover face with both hands', 'Pull away revealing face', 'Like peek-a-boo']},
+            {id: 'birthday', name: 'Birthday', type: 'holiday', desc: 'Middle finger touches chin then chest', steps: ['Middle finger of open hand', 'Touch chin then chest', 'Some add BIRTH + DAY']},
+            {id: 'holiday', name: 'Holiday', type: 'holiday', desc: 'Thumbs tap armpits twice', steps: ['Both hands in 5 shape', 'Thumbs tap armpits', 'Tap twice (relaxing)']},
+            {id: 'newyear', name: 'New Year', type: 'holiday', desc: 'NEW + YEAR combination', steps: ['Sign NEW (scoop motion)', 'Then sign YEAR (fists circle)', 'Combine both signs']},
+            {id: 'easter', name: 'Easter', type: 'holiday', desc: 'E-hands twist at wrists', steps: ['Both hands in E shape', 'Twist back and forth', 'At wrist level']},
+            {id: 'valentine', name: 'Valentine', type: 'holiday', desc: 'Draw heart on chest', steps: ['Both middle fingers', 'Draw heart shape on chest', 'Start at top of heart']}
         ];
         
         // Common ASL Phrases
@@ -1275,13 +1425,60 @@
         function renderLesson() {
             const sign = SIGNS[lessonIndex];
             
-            document.getElementById('lessonTitle').textContent = 
-                sign.type === 'letter' ? `Letter ${sign.name}` : `Number ${sign.name}`;
-            document.getElementById('lessonBadge').textContent = 
-                sign.type === 'letter' ? 'Alphabet' : 'Numbers';
-            document.getElementById('lessonBadge').className = 
-                `badge ${sign.type === 'letter' ? 'badge-coral' : 'badge-gold'}`;
-            document.getElementById('lessonImage').src = ASL_IMAGES[sign.id];
+            // Category labels and badges
+            const categoryLabels = {
+                'letter': 'Alphabet',
+                'number': 'Numbers',
+                'family': 'Family',
+                'color': 'Colors',
+                'day': 'Days',
+                'season': 'Seasons',
+                'holiday': 'Holidays'
+            };
+            const categoryBadges = {
+                'letter': 'badge-coral',
+                'number': 'badge-gold',
+                'family': 'badge-sage',
+                'color': 'badge-coral',
+                'day': 'badge-gold',
+                'season': 'badge-sage',
+                'holiday': 'badge-coral'
+            };
+            const typeIcons = {
+                'family': '👨‍👩‍👧‍👦',
+                'color': '🎨',
+                'day': '📅',
+                'season': '🌤️',
+                'holiday': '🎉'
+            };
+            const isVocab = ['family', 'color', 'day', 'season', 'holiday'].includes(sign.type);
+
+            document.getElementById('lessonTitle').textContent =
+                sign.type === 'letter' ? `Letter ${sign.name}` :
+                sign.type === 'number' ? `Number ${sign.name}` : sign.name;
+            document.getElementById('lessonBadge').textContent = categoryLabels[sign.type] || sign.type;
+            document.getElementById('lessonBadge').className = `badge ${categoryBadges[sign.type] || 'badge-coral'}`;
+
+            // Handle image display for vocab items without hand images
+            const lessonImg = document.getElementById('lessonImage');
+            if (isVocab) {
+                // Create or update vocab icon for lesson display
+                let vocabLessonIcon = document.getElementById('lessonVocabIcon');
+                if (!vocabLessonIcon) {
+                    vocabLessonIcon = document.createElement('div');
+                    vocabLessonIcon.id = 'lessonVocabIcon';
+                    vocabLessonIcon.style.cssText = 'font-size: 120px; text-align: center; margin: 20px auto;';
+                    lessonImg.parentNode.insertBefore(vocabLessonIcon, lessonImg);
+                }
+                vocabLessonIcon.textContent = typeIcons[sign.type] || '📝';
+                vocabLessonIcon.style.display = 'block';
+                lessonImg.style.display = 'none';
+            } else {
+                lessonImg.style.display = 'block';
+                lessonImg.src = ASL_IMAGES[sign.id];
+                const vocabLessonIcon = document.getElementById('lessonVocabIcon');
+                if (vocabLessonIcon) vocabLessonIcon.style.display = 'none';
+            }
             document.getElementById('lessonLetter').textContent = sign.name;
             document.getElementById('lessonDesc').textContent = sign.desc;
             
@@ -1330,26 +1527,71 @@
         function buildSignGrids() {
             const alphabetGrid = document.getElementById('alphabetGrid');
             const numbersGrid = document.getElementById('numbersGrid');
-            
+            const familyGrid = document.getElementById('familyGrid');
+            const colorsGrid = document.getElementById('colorsGrid');
+            const daysGrid = document.getElementById('daysGrid');
+            const seasonsGrid = document.getElementById('seasonsGrid');
+            const holidaysGrid = document.getElementById('holidaysGrid');
+
             SIGNS.filter(s => s.type === 'letter').forEach(sign => {
                 const tile = createSignTile(sign);
                 alphabetGrid.appendChild(tile);
             });
-            
+
             SIGNS.filter(s => s.type === 'number').forEach(sign => {
                 const tile = createSignTile(sign);
                 numbersGrid.appendChild(tile);
             });
+
+            SIGNS.filter(s => s.type === 'family').forEach(sign => {
+                const tile = createSignTile(sign, true);
+                familyGrid.appendChild(tile);
+            });
+
+            SIGNS.filter(s => s.type === 'color').forEach(sign => {
+                const tile = createSignTile(sign, true);
+                colorsGrid.appendChild(tile);
+            });
+
+            SIGNS.filter(s => s.type === 'day').forEach(sign => {
+                const tile = createSignTile(sign, true);
+                daysGrid.appendChild(tile);
+            });
+
+            SIGNS.filter(s => s.type === 'season').forEach(sign => {
+                const tile = createSignTile(sign, true);
+                seasonsGrid.appendChild(tile);
+            });
+
+            SIGNS.filter(s => s.type === 'holiday').forEach(sign => {
+                const tile = createSignTile(sign, true);
+                holidaysGrid.appendChild(tile);
+            });
         }
         
-        function createSignTile(sign) {
+        function createSignTile(sign, isVocab = false) {
             const tile = document.createElement('button');
-            tile.className = 'sign-tile';
+            tile.className = 'sign-tile' + (isVocab ? ' vocab-tile' : '');
             tile.dataset.id = sign.id;
-            tile.innerHTML = `
-                <img src="${ASL_IMAGES[sign.id]}" alt="${sign.name}">
-                <span class="sign-tile-label">${sign.name}</span>
-            `;
+            if (isVocab) {
+                // Vocabulary items show an icon/emoji instead of hand image
+                const typeIcons = {
+                    'family': '👨‍👩‍👧‍👦',
+                    'color': '🎨',
+                    'day': '📅',
+                    'season': '🌤️',
+                    'holiday': '🎉'
+                };
+                tile.innerHTML = `
+                    <span class="vocab-icon">${typeIcons[sign.type] || '📝'}</span>
+                    <span class="sign-tile-label">${sign.name}</span>
+                `;
+            } else {
+                tile.innerHTML = `
+                    <img src="${ASL_IMAGES[sign.id]}" alt="${sign.name}">
+                    <span class="sign-tile-label">${sign.name}</span>
+                `;
+            }
             tile.addEventListener('click', () => selectPracticeSign(sign, tile));
             return tile;
         }
@@ -1360,14 +1602,45 @@
             tile.classList.add('active');
             document.getElementById('practiceFeedback').textContent = `Practice: ${sign.name}`;
             document.getElementById('practiceFeedback').className = 'feedback-banner prompt';
-            
+
+            // Check if this is a vocabulary item (no hand image)
+            const isVocab = ['family', 'color', 'day', 'season', 'holiday'].includes(sign.type);
+            const typeIcons = {
+                'family': '👨‍👩‍👧‍👦',
+                'color': '🎨',
+                'day': '📅',
+                'season': '🌤️',
+                'holiday': '🎉'
+            };
+
             // Show and update the selected sign preview
             const preview = document.getElementById('selectedSignPreview');
             preview.style.display = 'block';
-            document.getElementById('selectedSignImage').src = ASL_IMAGES[sign.id];
+
+            const imageEl = document.getElementById('selectedSignImage');
+            if (isVocab) {
+                // For vocab items, hide the image and show text-based content
+                imageEl.style.display = 'none';
+                // Add or update a vocab icon display
+                let vocabIconEl = document.getElementById('selectedVocabIcon');
+                if (!vocabIconEl) {
+                    vocabIconEl = document.createElement('div');
+                    vocabIconEl.id = 'selectedVocabIcon';
+                    vocabIconEl.style.cssText = 'font-size: 80px; text-align: center; width: 150px;';
+                    imageEl.parentNode.insertBefore(vocabIconEl, imageEl);
+                }
+                vocabIconEl.textContent = typeIcons[sign.type] || '📝';
+                vocabIconEl.style.display = 'block';
+            } else {
+                imageEl.style.display = 'block';
+                imageEl.src = ASL_IMAGES[sign.id];
+                const vocabIconEl = document.getElementById('selectedVocabIcon');
+                if (vocabIconEl) vocabIconEl.style.display = 'none';
+            }
+
             document.getElementById('selectedSignLetter').textContent = sign.name;
             document.getElementById('selectedSignDesc').textContent = sign.desc;
-            
+
             // Scroll the preview into view
             preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
