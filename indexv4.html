@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
@@ -540,6 +541,81 @@
             margin: 0;
         }
 
+        /* Performance Toggle */
+        .performance-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--warm-white);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .performance-toggle-label {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .performance-toggle-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .performance-toggle-desc {
+            font-size: 11px;
+            color: var(--ink-muted);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: var(--coral);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
         /* Section Dividers */
         .section-label {
             font-size: 11px;
@@ -926,6 +1002,18 @@
                 </div>
             </div>
 
+            <!-- Body Skeleton Toggle -->
+            <div class="performance-toggle">
+                <div class="performance-toggle-label">
+                    <span class="performance-toggle-title">Body Skeleton</span>
+                    <span class="performance-toggle-desc">Enable for signs like Mother/Father (slower)</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="testSkeletonToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
             <div class="card">
                 <div class="camera-wrapper">
                     <video id="testVideo" autoplay playsinline></video>
@@ -977,7 +1065,19 @@
                     <p>The camera uses hand-tracking technology to detect your hand positions and recognize the ASL signs you're making. Your video is processed locally and never stored or sent anywhere.</p>
                 </div>
             </div>
-            
+
+            <!-- Body Skeleton Toggle -->
+            <div class="performance-toggle">
+                <div class="performance-toggle-label">
+                    <span class="performance-toggle-title">Body Skeleton</span>
+                    <span class="performance-toggle-desc">Enable for signs like Mother/Father (slower)</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="practiceSkeletonToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
             <div class="card">
                 <div class="camera-wrapper">
                     <video id="practiceVideo" autoplay playsinline></video>
@@ -1393,7 +1493,19 @@
         let lastDetectionTime = 0;
         let testCameraActive = false;
         let practiceCameraActive = false;
-        
+
+        // Body/Face skeleton detection (experimental)
+        let holistic = null;
+        let currentFaceLandmarks = null;
+        let currentPoseLandmarks = null;
+        let useHolisticMode = true; // Enable body skeleton detection
+
+        // Performance optimization settings
+        let frameSkipCount = 0;
+        const FRAME_SKIP = 2; // Process every 2nd frame (set to 1 for no skipping)
+        const VIDEO_WIDTH = 480; // Reduced from 640
+        const VIDEO_HEIGHT = 360; // Reduced from 480
+
         // DOM Elements
         const modeTabs = document.querySelectorAll('.mode-tab');
         const panels = document.querySelectorAll('.panel');
@@ -1742,31 +1854,43 @@
         // Phrases Camera functionality
         let phrasesCameraActive = false;
         let phrasesHands = null;
-        
+        let phrasesHolistic = null;
+
         function onPhrasesResults(results) {
             const canvas = document.getElementById('phrasesCanvas');
             const video = document.getElementById('phrasesVideo');
             const ctx = canvas.getContext('2d');
-            
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Draw body skeleton if holistic data is available
+            if (results.poseLandmarks || results.faceLandmarks) {
+                currentPoseLandmarks = results.poseLandmarks;
+                currentFaceLandmarks = results.faceLandmarks;
+                drawBodySkeleton(ctx, results.poseLandmarks, results.faceLandmarks, canvas.width, canvas.height);
+            }
+
+            // Get hand landmarks - works with both Hands and Holistic
+            const handLandmarks = results.multiHandLandmarks?.[0] ||
+                                  results.leftHandLandmarks ||
+                                  results.rightHandLandmarks;
+
             // Draw hand skeleton if detected
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                drawHand(ctx, landmarks, canvas.width, canvas.height);
-                
+            if (handLandmarks) {
+                drawHand(ctx, handLandmarks, canvas.width, canvas.height);
+
                 // Also draw trails for practice
-                const indexExt = landmarks[8].y < landmarks[6].y - 0.02;
-                const middleExt = landmarks[12].y < landmarks[10].y - 0.02;
-                const ringExt = landmarks[16].y < landmarks[14].y - 0.02;
-                const pinkyExt = landmarks[20].y < landmarks[18].y - 0.02;
-                
+                const indexExt = handLandmarks[8].y < handLandmarks[6].y - 0.02;
+                const middleExt = handLandmarks[12].y < handLandmarks[10].y - 0.02;
+                const ringExt = handLandmarks[16].y < handLandmarks[14].y - 0.02;
+                const pinkyExt = handLandmarks[20].y < handLandmarks[18].y - 0.02;
+
                 const isJPose = !indexExt && !middleExt && !ringExt && pinkyExt;
                 const isZPose = indexExt && !middleExt && !ringExt && !pinkyExt;
-                
-                updateTrails(landmarks, isJPose, isZPose);
+
+                updateTrails(handLandmarks, isJPose, isZPose);
                 drawTrails(ctx, canvas.width, canvas.height);
             }
         }
@@ -1775,55 +1899,101 @@
             const video = document.getElementById('phrasesVideo');
             const btn = document.getElementById('phrasesCameraBtn');
             const placeholder = document.getElementById('phrasesPlaceholder');
-            
+
             btn.textContent = 'Loading...';
             btn.disabled = true;
-            
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+                    video: { facingMode: 'user', width: { ideal: VIDEO_WIDTH }, height: { ideal: VIDEO_HEIGHT } }
                 });
                 video.srcObject = stream;
-                
+
                 await new Promise((resolve) => {
                     video.onloadedmetadata = () => {
                         video.play();
                         resolve();
                     };
                 });
-                
-                const handsInstance = new Hands({
-                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-                });
-                
-                handsInstance.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5
-                });
-                
-                handsInstance.onResults(onPhrasesResults);
-                await handsInstance.initialize();
-                
-                phrasesHands = handsInstance;
-                phrasesCameraActive = true;
-                
-                const processFrame = async () => {
-                    if (phrasesCameraActive && video.readyState >= 2) {
-                        await phrasesHands.send({ image: video });
-                    }
-                    if (phrasesCameraActive) {
-                        requestAnimationFrame(processFrame);
-                    }
-                };
-                
-                placeholder.style.display = 'none';
-                btn.textContent = 'Stop Camera';
-                btn.disabled = false;
-                
-                requestAnimationFrame(processFrame);
-                
+
+                // Use Holistic for body skeleton detection
+                if (useHolisticMode) {
+                    console.log('Phrases camera: Initializing MediaPipe Holistic (lite mode)...');
+                    const holisticInstance = new Holistic({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
+                    });
+
+                    holisticInstance.setOptions({
+                        modelComplexity: 0, // Lite mode for better performance
+                        smoothLandmarks: true,
+                        enableSegmentation: false,
+                        smoothSegmentation: false,
+                        refineFaceLandmarks: false, // Disabled for performance
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+
+                    holisticInstance.onResults(onPhrasesResults);
+                    await holisticInstance.initialize();
+
+                    phrasesHolistic = holisticInstance;
+                    phrasesCameraActive = true;
+
+                    const processFrame = async () => {
+                        if (phrasesCameraActive && video.readyState >= 2) {
+                            // Frame skipping for performance
+                            frameSkipCount++;
+                            if (frameSkipCount >= FRAME_SKIP) {
+                                frameSkipCount = 0;
+                                await phrasesHolistic.send({ image: video });
+                            }
+                        }
+                        if (phrasesCameraActive) {
+                            requestAnimationFrame(processFrame);
+                        }
+                    };
+
+                    placeholder.style.display = 'none';
+                    btn.textContent = 'Stop Camera';
+                    btn.disabled = false;
+
+                    requestAnimationFrame(processFrame);
+                    console.log('Phrases camera started with body skeleton detection');
+                } else {
+                    // Fallback to hands-only mode
+                    const handsInstance = new Hands({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                    });
+
+                    handsInstance.setOptions({
+                        maxNumHands: 1,
+                        modelComplexity: 1,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+
+                    handsInstance.onResults(onPhrasesResults);
+                    await handsInstance.initialize();
+
+                    phrasesHands = handsInstance;
+                    phrasesCameraActive = true;
+
+                    const processFrame = async () => {
+                        if (phrasesCameraActive && video.readyState >= 2) {
+                            await phrasesHands.send({ image: video });
+                        }
+                        if (phrasesCameraActive) {
+                            requestAnimationFrame(processFrame);
+                        }
+                    };
+
+                    placeholder.style.display = 'none';
+                    btn.textContent = 'Stop Camera';
+                    btn.disabled = false;
+
+                    requestAnimationFrame(processFrame);
+                }
+
             } catch (error) {
                 console.error('Phrases camera error:', error);
                 btn.textContent = 'Camera Error - Try Again';
@@ -2676,7 +2846,53 @@
                 return fingersTouching(landmarks, 8, 4, 0.06) &&
                        middleExt && ringExt && pinkyExt;
             }
-            
+
+            // ===== FAMILY SIGNS (Experimental - requires body skeleton) =====
+
+            // Mother: Open hand with thumb on chin
+            if (id === 'mother') {
+                // Check if we have face landmarks available
+                if (currentFaceLandmarks && currentFaceLandmarks.length > 152) {
+                    const openHand = isOpen5Hand(landmarks);
+                    const thumbOnChin = isThumbNearChin(landmarks, currentFaceLandmarks, 0.12);
+                    return openHand && thumbOnChin;
+                }
+                // Fallback: Just check for open hand if no face detection
+                return isOpen5Hand(landmarks);
+            }
+
+            // Father: Open hand with thumb on forehead
+            if (id === 'father') {
+                // Check if we have face landmarks available
+                if (currentFaceLandmarks && currentFaceLandmarks.length > 10) {
+                    const openHand = isOpen5Hand(landmarks);
+                    const thumbOnForehead = isThumbNearForehead(landmarks, currentFaceLandmarks, 0.12);
+                    return openHand && thumbOnForehead;
+                }
+                // Fallback: Just check for open hand if no face detection
+                return isOpen5Hand(landmarks);
+            }
+
+            // Grandmother: Mother sign (could add motion detection for bounces later)
+            if (id === 'grandmother') {
+                if (currentFaceLandmarks && currentFaceLandmarks.length > 152) {
+                    const openHand = isOpen5Hand(landmarks);
+                    const thumbOnChin = isThumbNearChin(landmarks, currentFaceLandmarks, 0.12);
+                    return openHand && thumbOnChin;
+                }
+                return isOpen5Hand(landmarks);
+            }
+
+            // Grandfather: Father sign (could add motion detection for bounces later)
+            if (id === 'grandfather') {
+                if (currentFaceLandmarks && currentFaceLandmarks.length > 10) {
+                    const openHand = isOpen5Hand(landmarks);
+                    const thumbOnForehead = isThumbNearForehead(landmarks, currentFaceLandmarks, 0.12);
+                    return openHand && thumbOnForehead;
+                }
+                return isOpen5Hand(landmarks);
+            }
+
             return false;
         }
         
@@ -2728,36 +2944,259 @@
             });
         }
 
+        // ============ BODY SKELETON DRAWING (EXPERIMENTAL) ============
+
+        // Draw a simple body skeleton from pose and face landmarks
+        function drawBodySkeleton(ctx, poseLandmarks, faceLandmarks, width, height) {
+            if (!poseLandmarks && !faceLandmarks) return;
+
+            ctx.save();
+
+            // Color scheme for body skeleton
+            const skeletonColor = '#FF6B6B';  // Coral/red for body
+            const faceColor = '#FFB347';       // Orange for face points
+            const jointColor = '#FFFFFF';      // White for joint centers
+
+            // Draw pose skeleton (shoulders, arms) if available
+            if (poseLandmarks && poseLandmarks.length > 0) {
+                ctx.strokeStyle = skeletonColor;
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                // Pose landmark indices (MediaPipe Holistic):
+                // 0 = nose, 11 = left shoulder, 12 = right shoulder
+                // 13 = left elbow, 14 = right elbow
+                // 15 = left wrist, 16 = right wrist
+
+                const leftShoulder = poseLandmarks[11];
+                const rightShoulder = poseLandmarks[12];
+                const leftElbow = poseLandmarks[13];
+                const rightElbow = poseLandmarks[14];
+                const leftWrist = poseLandmarks[15];
+                const rightWrist = poseLandmarks[16];
+                const nose = poseLandmarks[0];
+
+                // Draw shoulder line
+                if (leftShoulder && rightShoulder) {
+                    ctx.beginPath();
+                    ctx.moveTo(leftShoulder.x * width, leftShoulder.y * height);
+                    ctx.lineTo(rightShoulder.x * width, rightShoulder.y * height);
+                    ctx.stroke();
+
+                    // Draw neck (midpoint of shoulders to nose)
+                    if (nose) {
+                        const neckX = (leftShoulder.x + rightShoulder.x) / 2 * width;
+                        const neckY = (leftShoulder.y + rightShoulder.y) / 2 * height;
+                        ctx.beginPath();
+                        ctx.moveTo(neckX, neckY);
+                        ctx.lineTo(nose.x * width, nose.y * height);
+                        ctx.stroke();
+                    }
+                }
+
+                // Draw left arm
+                if (leftShoulder && leftElbow) {
+                    ctx.beginPath();
+                    ctx.moveTo(leftShoulder.x * width, leftShoulder.y * height);
+                    ctx.lineTo(leftElbow.x * width, leftElbow.y * height);
+                    ctx.stroke();
+                }
+                if (leftElbow && leftWrist) {
+                    ctx.beginPath();
+                    ctx.moveTo(leftElbow.x * width, leftElbow.y * height);
+                    ctx.lineTo(leftWrist.x * width, leftWrist.y * height);
+                    ctx.stroke();
+                }
+
+                // Draw right arm
+                if (rightShoulder && rightElbow) {
+                    ctx.beginPath();
+                    ctx.moveTo(rightShoulder.x * width, rightShoulder.y * height);
+                    ctx.lineTo(rightElbow.x * width, rightElbow.y * height);
+                    ctx.stroke();
+                }
+                if (rightElbow && rightWrist) {
+                    ctx.beginPath();
+                    ctx.moveTo(rightElbow.x * width, rightElbow.y * height);
+                    ctx.lineTo(rightWrist.x * width, rightWrist.y * height);
+                    ctx.stroke();
+                }
+
+                // Draw joints as circles
+                const joints = [leftShoulder, rightShoulder, leftElbow, rightElbow, leftWrist, rightWrist];
+                joints.forEach(joint => {
+                    if (joint && joint.visibility > 0.5) {
+                        ctx.beginPath();
+                        ctx.arc(joint.x * width, joint.y * height, 8, 0, 2 * Math.PI);
+                        ctx.fillStyle = skeletonColor;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(joint.x * width, joint.y * height, 4, 0, 2 * Math.PI);
+                        ctx.fillStyle = jointColor;
+                        ctx.fill();
+                    }
+                });
+            }
+
+            // Draw face landmarks (chin, forehead, etc.) if available
+            if (faceLandmarks && faceLandmarks.length > 0) {
+                // MediaPipe Face Mesh landmark indices:
+                // 152 = chin (bottom of face)
+                // 10 = forehead (top of face between eyebrows)
+                // 234 = left cheek, 454 = right cheek
+                // 1 = nose tip
+
+                const chin = faceLandmarks[152];
+                const forehead = faceLandmarks[10];
+                const noseTip = faceLandmarks[1];
+                const leftCheek = faceLandmarks[234];
+                const rightCheek = faceLandmarks[454];
+
+                // Draw head outline as an ellipse
+                if (forehead && chin) {
+                    const centerX = (forehead.x + chin.x) / 2 * width;
+                    const centerY = (forehead.y + chin.y) / 2 * height;
+                    const radiusY = Math.abs(chin.y - forehead.y) / 2 * height;
+                    const radiusX = radiusY * 0.8;
+
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+                    ctx.strokeStyle = faceColor;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                // Draw key face reference points (chin, forehead)
+                const facePoints = [
+                    { point: chin, label: 'CHIN' },
+                    { point: forehead, label: 'FOREHEAD' }
+                ];
+
+                facePoints.forEach(({ point, label }) => {
+                    if (point) {
+                        const x = point.x * width;
+                        const y = point.y * height;
+
+                        // Outer circle
+                        ctx.beginPath();
+                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
+                        ctx.fillStyle = faceColor;
+                        ctx.globalAlpha = 0.7;
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+
+                        // Inner circle
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = jointColor;
+                        ctx.fill();
+
+                        // Label
+                        ctx.font = 'bold 10px DM Sans, sans-serif';
+                        ctx.fillStyle = faceColor;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(label, x, y - 15);
+                    }
+                });
+
+                // Store face landmarks globally for sign detection
+                currentFaceLandmarks = faceLandmarks;
+            }
+
+            ctx.restore();
+        }
+
+        // Check if thumb is near chin (for Mother sign)
+        function isThumbNearChin(handLandmarks, faceLandmarks, threshold = 0.08) {
+            if (!handLandmarks || !faceLandmarks || faceLandmarks.length < 153) return false;
+
+            const thumbTip = handLandmarks[4];
+            const chin = faceLandmarks[152];
+
+            if (!thumbTip || !chin) return false;
+
+            const dx = thumbTip.x - chin.x;
+            const dy = thumbTip.y - chin.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            return distance < threshold;
+        }
+
+        // Check if thumb is near forehead (for Father sign)
+        function isThumbNearForehead(handLandmarks, faceLandmarks, threshold = 0.08) {
+            if (!handLandmarks || !faceLandmarks || faceLandmarks.length < 11) return false;
+
+            const thumbTip = handLandmarks[4];
+            const forehead = faceLandmarks[10];
+
+            if (!thumbTip || !forehead) return false;
+
+            const dx = thumbTip.x - forehead.x;
+            const dy = thumbTip.y - forehead.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            return distance < threshold;
+        }
+
+        // Check if hand is in open-5 position (spread fingers)
+        function isOpen5Hand(landmarks) {
+            if (!landmarks) return false;
+
+            const indexUp = landmarks[8].y < landmarks[6].y - 0.02;
+            const middleUp = landmarks[12].y < landmarks[10].y - 0.02;
+            const ringUp = landmarks[16].y < landmarks[14].y - 0.02;
+            const pinkyUp = landmarks[20].y < landmarks[18].y - 0.02;
+
+            // Fingers should be spread
+            const spread1 = landmarkDist(landmarks, 8, 12) > 0.03;
+            const spread2 = landmarkDist(landmarks, 12, 16) > 0.025;
+            const spread3 = landmarkDist(landmarks, 16, 20) > 0.025;
+
+            return indexUp && middleUp && ringUp && pinkyUp && spread1 && spread2 && spread3;
+        }
+
         // Camera handling - Test Mode
         function onTestResults(results) {
             const canvas = document.getElementById('testCanvas');
             const video = document.getElementById('testVideo');
             const ctx = canvas.getContext('2d');
-            
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Draw body skeleton if holistic data is available
+            if (results.poseLandmarks || results.faceLandmarks) {
+                currentPoseLandmarks = results.poseLandmarks;
+                currentFaceLandmarks = results.faceLandmarks;
+                drawBodySkeleton(ctx, results.poseLandmarks, results.faceLandmarks, canvas.width, canvas.height);
+            }
+
+            // Get hand landmarks - works with both Hands and Holistic
+            const handLandmarks = results.multiHandLandmarks?.[0] ||
+                                  results.leftHandLandmarks ||
+                                  results.rightHandLandmarks;
+
             // Draw hand skeleton and trails if detected
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                drawHand(ctx, landmarks, canvas.width, canvas.height);
-                
+            if (handLandmarks) {
+                drawHand(ctx, handLandmarks, canvas.width, canvas.height);
+
                 // Check poses for trail tracking
-                const indexExt = landmarks[8].y < landmarks[6].y - 0.02;
-                const middleExt = landmarks[12].y < landmarks[10].y - 0.02;
-                const ringExt = landmarks[16].y < landmarks[14].y - 0.02;
-                const pinkyExt = landmarks[20].y < landmarks[18].y - 0.02;
-                
+                const indexExt = handLandmarks[8].y < handLandmarks[6].y - 0.02;
+                const middleExt = handLandmarks[12].y < handLandmarks[10].y - 0.02;
+                const ringExt = handLandmarks[16].y < handLandmarks[14].y - 0.02;
+                const pinkyExt = handLandmarks[20].y < handLandmarks[18].y - 0.02;
+
                 const isJPose = !indexExt && !middleExt && !ringExt && pinkyExt;
                 const isZPose = indexExt && !middleExt && !ringExt && !pinkyExt;
-                
-                updateTrails(landmarks, isJPose, isZPose);
+
+                updateTrails(handLandmarks, isJPose, isZPose);
                 drawTrails(ctx, canvas.width, canvas.height);
             }
-            
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0 && testSign) {
-                if (detectSign(results.multiHandLandmarks[0], testSign)) {
+
+            if (handLandmarks && testSign) {
+                if (detectSign(handLandmarks, testSign)) {
                     const now = Date.now();
                     if (now - lastDetectionTime > 2000) {
                         lastDetectionTime = now;
@@ -2778,31 +3217,42 @@
             const canvas = document.getElementById('practiceCanvas');
             const video = document.getElementById('practiceVideo');
             const ctx = canvas.getContext('2d');
-            
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Draw body skeleton if holistic data is available
+            if (results.poseLandmarks || results.faceLandmarks) {
+                currentPoseLandmarks = results.poseLandmarks;
+                currentFaceLandmarks = results.faceLandmarks;
+                drawBodySkeleton(ctx, results.poseLandmarks, results.faceLandmarks, canvas.width, canvas.height);
+            }
+
+            // Get hand landmarks - works with both Hands and Holistic
+            const handLandmarks = results.multiHandLandmarks?.[0] ||
+                                  results.leftHandLandmarks ||
+                                  results.rightHandLandmarks;
+
             // Draw hand skeleton and trails if detected
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                drawHand(ctx, landmarks, canvas.width, canvas.height);
-                
+            if (handLandmarks) {
+                drawHand(ctx, handLandmarks, canvas.width, canvas.height);
+
                 // Check poses for trail tracking
-                const indexExt = landmarks[8].y < landmarks[6].y - 0.02;
-                const middleExt = landmarks[12].y < landmarks[10].y - 0.02;
-                const ringExt = landmarks[16].y < landmarks[14].y - 0.02;
-                const pinkyExt = landmarks[20].y < landmarks[18].y - 0.02;
-                
+                const indexExt = handLandmarks[8].y < handLandmarks[6].y - 0.02;
+                const middleExt = handLandmarks[12].y < handLandmarks[10].y - 0.02;
+                const ringExt = handLandmarks[16].y < handLandmarks[14].y - 0.02;
+                const pinkyExt = handLandmarks[20].y < handLandmarks[18].y - 0.02;
+
                 const isJPose = !indexExt && !middleExt && !ringExt && pinkyExt;
                 const isZPose = indexExt && !middleExt && !ringExt && !pinkyExt;
-                
-                updateTrails(landmarks, isJPose, isZPose);
+
+                updateTrails(handLandmarks, isJPose, isZPose);
                 drawTrails(ctx, canvas.width, canvas.height);
             }
-            
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0 && practiceSign) {
-                if (detectSign(results.multiHandLandmarks[0], practiceSign)) {
+
+            if (handLandmarks && practiceSign) {
+                if (detectSign(handLandmarks, practiceSign)) {
                     const now = Date.now();
                     if (now - lastDetectionTime > 2000) {
                         lastDetectionTime = now;
@@ -2836,17 +3286,17 @@
             
             try {
                 console.log('Starting camera for mode:', mode);
-                
-                // Get camera stream first
+
+                // Get camera stream first (reduced resolution for performance)
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'user', 
-                        width: { ideal: 640 }, 
-                        height: { ideal: 480 } 
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: VIDEO_WIDTH },
+                        height: { ideal: VIDEO_HEIGHT }
                     }
                 });
                 video.srcObject = stream;
-                
+
                 // Wait for video to be ready
                 await new Promise((resolve) => {
                     video.onloadedmetadata = () => {
@@ -2854,44 +3304,85 @@
                         resolve();
                     };
                 });
-                
+
                 console.log('Video ready:', video.videoWidth, 'x', video.videoHeight);
+
+                // Initialize MediaPipe - use Holistic for body skeleton or Hands for hand-only
+                let mediapipeInstance;
+
+                if (useHolisticMode) {
+                    console.log('Initializing MediaPipe Holistic (lite mode for performance)...');
+                    mediapipeInstance = new Holistic({
+                        locateFile: (file) => {
+                            console.log('Loading MediaPipe Holistic file:', file);
+                            return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`;
+                        }
+                    });
+
+                    mediapipeInstance.setOptions({
+                        modelComplexity: 0, // Lite mode - much faster
+                        smoothLandmarks: true,
+                        enableSegmentation: false,
+                        smoothSegmentation: false,
+                        refineFaceLandmarks: false, // Disabled for performance
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+
+                    mediapipeInstance.onResults((results) => {
+                        if (mode === 'test') {
+                            onTestResults(results);
+                        } else {
+                            onPracticeResults(results);
+                        }
+                    });
+
+                    await mediapipeInstance.initialize();
+                    console.log('MediaPipe Holistic initialized (body skeleton enabled)');
+                    holistic = mediapipeInstance;
+                } else {
+                    console.log('Initializing MediaPipe Hands (hand-only mode)...');
+                    mediapipeInstance = new Hands({
+                        locateFile: (file) => {
+                            console.log('Loading MediaPipe file:', file);
+                            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                        }
+                    });
+
+                    mediapipeInstance.setOptions({
+                        maxNumHands: 1,
+                        modelComplexity: 1,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+
+                    mediapipeInstance.onResults((results) => {
+                        if (mode === 'test') {
+                            onTestResults(results);
+                        } else {
+                            onPracticeResults(results);
+                        }
+                    });
+
+                    await mediapipeInstance.initialize();
+                    console.log('MediaPipe Hands initialized');
+                    hands = mediapipeInstance;
+                }
                 
-                // Initialize MediaPipe Hands
-                const handsInstance = new Hands({
-                    locateFile: (file) => {
-                        console.log('Loading MediaPipe file:', file);
-                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-                    }
-                });
-                
-                handsInstance.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5
-                });
-                
-                handsInstance.onResults((results) => {
-                    if (mode === 'test') {
-                        onTestResults(results);
-                    } else {
-                        onPracticeResults(results);
-                    }
-                });
-                
-                // Wait for MediaPipe to initialize
-                await handsInstance.initialize();
-                console.log('MediaPipe Hands initialized');
-                
-                // Store the hands instance
-                hands = handsInstance;
-                
-                // Set up the processing loop
+                // Set up the processing loop with frame skipping for performance
                 const processFrame = async () => {
                     if ((mode === 'test' && testCameraActive) || (mode === 'practice' && practiceCameraActive)) {
                         if (video.readyState >= 2) {
-                            await hands.send({ image: video });
+                            // Frame skipping for better performance
+                            frameSkipCount++;
+                            if (frameSkipCount >= FRAME_SKIP) {
+                                frameSkipCount = 0;
+                                // Use holistic or hands based on mode
+                                const instance = useHolisticMode ? holistic : hands;
+                                if (instance) {
+                                    await instance.send({ image: video });
+                                }
+                            }
                         }
                         requestAnimationFrame(processFrame);
                     }
@@ -2968,7 +3459,43 @@
                 startCamera('practice');
             }
         });
-        
+
+        // Body Skeleton Toggle Event Listeners
+        function updateSkeletonMode(enabled) {
+            useHolisticMode = enabled;
+            // Sync both toggles
+            const testToggle = document.getElementById('testSkeletonToggle');
+            const practiceToggle = document.getElementById('practiceSkeletonToggle');
+            if (testToggle) testToggle.checked = enabled;
+            if (practiceToggle) practiceToggle.checked = enabled;
+
+            // If camera is active, notify user to restart
+            if (testCameraActive || practiceCameraActive) {
+                const msg = enabled
+                    ? 'Body skeleton enabled. Restart camera to apply.'
+                    : 'Fast mode enabled. Restart camera to apply.';
+                console.log(msg);
+                // Update feedback banner if visible
+                const testFb = document.getElementById('testFeedback');
+                const practiceFb = document.getElementById('practiceFeedback');
+                if (testCameraActive && testFb) {
+                    testFb.textContent = msg;
+                    testFb.className = 'feedback-banner prompt';
+                }
+                if (practiceCameraActive && practiceFb) {
+                    practiceFb.textContent = msg;
+                    practiceFb.className = 'feedback-banner prompt';
+                }
+            }
+        }
+
+        document.getElementById('testSkeletonToggle')?.addEventListener('change', (e) => {
+            updateSkeletonMode(e.target.checked);
+        });
+
+        document.getElementById('practiceSkeletonToggle')?.addEventListener('change', (e) => {
+            updateSkeletonMode(e.target.checked);
+        });
 
 
         // Detect open palm gesture (for adding space)
