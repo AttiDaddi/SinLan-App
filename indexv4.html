@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
@@ -1402,6 +1403,37 @@
         let lastDetectionTime = 0;
         let testCameraActive = false;
         let practiceCameraActive = false;
+
+        // Pose detection state
+        let poseInstance = null;
+        let currentPoseLandmarks = null;
+
+        // Body landmark indices (MediaPipe Pose)
+        const POSE_LANDMARKS = {
+            NOSE: 0,
+            LEFT_EYE_INNER: 1,
+            LEFT_EYE: 2,
+            LEFT_EYE_OUTER: 3,
+            RIGHT_EYE_INNER: 4,
+            RIGHT_EYE: 5,
+            RIGHT_EYE_OUTER: 6,
+            LEFT_EAR: 7,
+            RIGHT_EAR: 8,
+            MOUTH_LEFT: 9,
+            MOUTH_RIGHT: 10,
+            LEFT_SHOULDER: 11,
+            RIGHT_SHOULDER: 12,
+            LEFT_ELBOW: 13,
+            RIGHT_ELBOW: 14,
+            LEFT_WRIST: 15,
+            RIGHT_WRIST: 16,
+            LEFT_PINKY: 17,
+            RIGHT_PINKY: 18,
+            LEFT_INDEX: 19,
+            RIGHT_INDEX: 20,
+            LEFT_THUMB: 21,
+            RIGHT_THUMB: 22
+        };
         
         // DOM Elements
         const modeTabs = document.querySelectorAll('.mode-tab');
@@ -2816,31 +2848,46 @@
             const canvas = document.getElementById('testCanvas');
             const video = document.getElementById('testVideo');
             const ctx = canvas.getContext('2d');
-            
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Draw body skeleton if pose landmarks available
+            if (currentPoseLandmarks) {
+                drawBodySkeleton(ctx, currentPoseLandmarks, canvas.width, canvas.height);
+            }
+
             // Draw hand skeleton and trails if detected
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
                 drawHand(ctx, landmarks, canvas.width, canvas.height);
-                
+
                 // Check poses for trail tracking
                 const indexExt = landmarks[8].y < landmarks[6].y - 0.02;
                 const middleExt = landmarks[12].y < landmarks[10].y - 0.02;
                 const ringExt = landmarks[16].y < landmarks[14].y - 0.02;
                 const pinkyExt = landmarks[20].y < landmarks[18].y - 0.02;
-                
+
                 const isJPose = !indexExt && !middleExt && !ringExt && pinkyExt;
                 const isZPose = indexExt && !middleExt && !ringExt && !pinkyExt;
-                
+
                 updateTrails(landmarks, isJPose, isZPose);
                 drawTrails(ctx, canvas.width, canvas.height);
             }
-            
+
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0 && testSign) {
-                if (detectSign(results.multiHandLandmarks[0], testSign)) {
+                // Check if it's a vocabulary sign (needs body position) or regular sign
+                const isVocabSign = ['family', 'color', 'day', 'season', 'holiday'].includes(testSign.type);
+
+                let detected = false;
+                if (isVocabSign && currentPoseLandmarks) {
+                    detected = detectVocabSign(results.multiHandLandmarks[0], currentPoseLandmarks, testSign);
+                } else if (!isVocabSign) {
+                    detected = detectSign(results.multiHandLandmarks[0], testSign);
+                }
+
+                if (detected) {
                     const now = Date.now();
                     if (now - lastDetectionTime > 2000) {
                         lastDetectionTime = now;
@@ -2861,31 +2908,46 @@
             const canvas = document.getElementById('practiceCanvas');
             const video = document.getElementById('practiceVideo');
             const ctx = canvas.getContext('2d');
-            
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Draw body skeleton if pose landmarks available
+            if (currentPoseLandmarks) {
+                drawBodySkeleton(ctx, currentPoseLandmarks, canvas.width, canvas.height);
+            }
+
             // Draw hand skeleton and trails if detected
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
                 drawHand(ctx, landmarks, canvas.width, canvas.height);
-                
+
                 // Check poses for trail tracking
                 const indexExt = landmarks[8].y < landmarks[6].y - 0.02;
                 const middleExt = landmarks[12].y < landmarks[10].y - 0.02;
                 const ringExt = landmarks[16].y < landmarks[14].y - 0.02;
                 const pinkyExt = landmarks[20].y < landmarks[18].y - 0.02;
-                
+
                 const isJPose = !indexExt && !middleExt && !ringExt && pinkyExt;
                 const isZPose = indexExt && !middleExt && !ringExt && !pinkyExt;
-                
+
                 updateTrails(landmarks, isJPose, isZPose);
                 drawTrails(ctx, canvas.width, canvas.height);
             }
-            
+
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0 && practiceSign) {
-                if (detectSign(results.multiHandLandmarks[0], practiceSign)) {
+                // Check if it's a vocabulary sign (needs body position) or regular sign
+                const isVocabSign = ['family', 'color', 'day', 'season', 'holiday'].includes(practiceSign.type);
+
+                let detected = false;
+                if (isVocabSign && currentPoseLandmarks) {
+                    detected = detectVocabSign(results.multiHandLandmarks[0], currentPoseLandmarks, practiceSign);
+                } else if (!isVocabSign) {
+                    detected = detectSign(results.multiHandLandmarks[0], practiceSign);
+                }
+
+                if (detected) {
                     const now = Date.now();
                     if (now - lastDetectionTime > 2000) {
                         lastDetectionTime = now;
@@ -2904,6 +2966,216 @@
                     }
                 }
             }
+        }
+
+        // Draw body skeleton (head, shoulders, arms)
+        function drawBodySkeleton(ctx, poseLandmarks, width, height) {
+            if (!poseLandmarks || poseLandmarks.length === 0) return;
+
+            // Helper to convert normalized coords to canvas coords
+            const toCanvas = (landmark) => ({
+                x: landmark.x * width,
+                y: landmark.y * height
+            });
+
+            // Get key landmarks
+            const nose = toCanvas(poseLandmarks[POSE_LANDMARKS.NOSE]);
+            const leftShoulder = toCanvas(poseLandmarks[POSE_LANDMARKS.LEFT_SHOULDER]);
+            const rightShoulder = toCanvas(poseLandmarks[POSE_LANDMARKS.RIGHT_SHOULDER]);
+            const leftElbow = toCanvas(poseLandmarks[POSE_LANDMARKS.LEFT_ELBOW]);
+            const rightElbow = toCanvas(poseLandmarks[POSE_LANDMARKS.RIGHT_ELBOW]);
+            const leftWrist = toCanvas(poseLandmarks[POSE_LANDMARKS.LEFT_WRIST]);
+            const rightWrist = toCanvas(poseLandmarks[POSE_LANDMARKS.RIGHT_WRIST]);
+            const leftEar = toCanvas(poseLandmarks[POSE_LANDMARKS.LEFT_EAR]);
+            const rightEar = toCanvas(poseLandmarks[POSE_LANDMARKS.RIGHT_EAR]);
+            const mouthLeft = toCanvas(poseLandmarks[POSE_LANDMARKS.MOUTH_LEFT]);
+            const mouthRight = toCanvas(poseLandmarks[POSE_LANDMARKS.MOUTH_RIGHT]);
+
+            // Calculate head size based on ear distance
+            const headRadius = Math.abs(leftEar.x - rightEar.x) * 0.8;
+
+            // Draw style
+            ctx.strokeStyle = 'rgba(255, 200, 100, 0.8)';
+            ctx.fillStyle = 'rgba(255, 200, 100, 0.3)';
+            ctx.lineWidth = 3;
+
+            // Draw head circle
+            ctx.beginPath();
+            ctx.arc(nose.x, nose.y - headRadius * 0.3, headRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw chin marker (for MOTHER sign detection)
+            const chinY = (mouthLeft.y + mouthRight.y) / 2 + headRadius * 0.4;
+            const chinX = (mouthLeft.x + mouthRight.x) / 2;
+            ctx.beginPath();
+            ctx.arc(chinX, chinY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.6)';
+            ctx.fill();
+
+            // Draw forehead marker (for FATHER sign detection)
+            const foreheadY = nose.y - headRadius * 0.8;
+            ctx.beginPath();
+            ctx.arc(nose.x, foreheadY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(100, 100, 255, 0.6)';
+            ctx.fill();
+
+            // Draw shoulders line
+            ctx.strokeStyle = 'rgba(255, 200, 100, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(leftShoulder.x, leftShoulder.y);
+            ctx.lineTo(rightShoulder.x, rightShoulder.y);
+            ctx.stroke();
+
+            // Draw shoulder joints
+            ctx.fillStyle = 'rgba(255, 200, 100, 0.8)';
+            ctx.beginPath();
+            ctx.arc(leftShoulder.x, leftShoulder.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(rightShoulder.x, rightShoulder.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw arms (shoulder -> elbow -> wrist)
+            ctx.strokeStyle = 'rgba(255, 200, 100, 0.6)';
+            ctx.lineWidth = 2;
+
+            // Left arm
+            ctx.beginPath();
+            ctx.moveTo(leftShoulder.x, leftShoulder.y);
+            ctx.lineTo(leftElbow.x, leftElbow.y);
+            ctx.lineTo(leftWrist.x, leftWrist.y);
+            ctx.stroke();
+
+            // Right arm
+            ctx.beginPath();
+            ctx.moveTo(rightShoulder.x, rightShoulder.y);
+            ctx.lineTo(rightElbow.x, rightElbow.y);
+            ctx.lineTo(rightWrist.x, rightWrist.y);
+            ctx.stroke();
+
+            // Draw elbow and wrist joints
+            [leftElbow, rightElbow, leftWrist, rightWrist].forEach(joint => {
+                ctx.beginPath();
+                ctx.arc(joint.x, joint.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 200, 100, 0.6)';
+                ctx.fill();
+            });
+
+            // Draw chest marker (for signs that touch chest)
+            const chestX = (leftShoulder.x + rightShoulder.x) / 2;
+            const chestY = leftShoulder.y + headRadius * 0.8;
+            ctx.beginPath();
+            ctx.arc(chestX, chestY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(100, 255, 100, 0.6)';
+            ctx.fill();
+        }
+
+        // Detect vocabulary signs using hand and body landmarks
+        function detectVocabSign(handLandmarks, poseLandmarks, sign) {
+            if (!handLandmarks || !poseLandmarks) return false;
+
+            // Get thumb tip position (landmark 4)
+            const thumbTip = handLandmarks[4];
+
+            // Get key body positions
+            const nose = poseLandmarks[POSE_LANDMARKS.NOSE];
+            const mouthLeft = poseLandmarks[POSE_LANDMARKS.MOUTH_LEFT];
+            const mouthRight = poseLandmarks[POSE_LANDMARKS.MOUTH_RIGHT];
+            const leftEar = poseLandmarks[POSE_LANDMARKS.LEFT_EAR];
+            const rightEar = poseLandmarks[POSE_LANDMARKS.RIGHT_EAR];
+            const leftShoulder = poseLandmarks[POSE_LANDMARKS.LEFT_SHOULDER];
+            const rightShoulder = poseLandmarks[POSE_LANDMARKS.RIGHT_SHOULDER];
+
+            // Calculate reference distances for scaling
+            const headWidth = Math.abs(leftEar.x - rightEar.x);
+            const threshold = headWidth * 0.4; // Proximity threshold
+
+            // Calculate key positions
+            const chinX = (mouthLeft.x + mouthRight.x) / 2;
+            const chinY = (mouthLeft.y + mouthRight.y) / 2 + headWidth * 0.3;
+            const foreheadY = nose.y - headWidth * 0.6;
+            const chestX = (leftShoulder.x + rightShoulder.x) / 2;
+            const chestY = leftShoulder.y + headWidth * 0.6;
+
+            // Check if hand is open (5-hand shape) - needed for family signs
+            const isOpenHand = isHandOpen(handLandmarks);
+
+            // Distance helper
+            const dist = (p1x, p1y, p2x, p2y) => Math.sqrt((p1x - p2x) ** 2 + (p1y - p2y) ** 2);
+
+            // Detection based on sign type
+            switch (sign.id) {
+                case 'mother':
+                    // Thumb near chin, open hand
+                    return isOpenHand && dist(thumbTip.x, thumbTip.y, chinX, chinY) < threshold;
+
+                case 'father':
+                    // Thumb near forehead, open hand
+                    return isOpenHand && dist(thumbTip.x, thumbTip.y, nose.x, foreheadY) < threshold;
+
+                case 'grandmother':
+                    // Similar to mother but we just check chin position
+                    return isOpenHand && dist(thumbTip.x, thumbTip.y, chinX, chinY) < threshold;
+
+                case 'grandfather':
+                    // Similar to father
+                    return isOpenHand && dist(thumbTip.x, thumbTip.y, nose.x, foreheadY) < threshold;
+
+                case 'white':
+                    // Hand on chest pulling away - check if hand near chest
+                    return dist(thumbTip.x, thumbTip.y, chestX, chestY) < threshold * 1.5;
+
+                case 'red':
+                case 'pink':
+                    // Finger near lips/chin
+                    const indexTip = handLandmarks[8];
+                    return dist(indexTip.x, indexTip.y, chinX, chinY - headWidth * 0.2) < threshold;
+
+                case 'black':
+                    // Finger across forehead
+                    const indexForehead = handLandmarks[8];
+                    return Math.abs(indexForehead.y - foreheadY) < threshold * 0.5 &&
+                           indexForehead.x > Math.min(leftEar.x, rightEar.x) &&
+                           indexForehead.x < Math.max(leftEar.x, rightEar.x);
+
+                case 'summer':
+                    // Bent finger across forehead (similar to black but bent)
+                    const summerIndex = handLandmarks[8];
+                    return Math.abs(summerIndex.y - foreheadY) < threshold * 0.6;
+
+                case 'hot':
+                    // Hand near mouth
+                    const hotHand = handLandmarks[9]; // Palm base
+                    return dist(hotHand.x, hotHand.y, chinX, chinY - headWidth * 0.1) < threshold;
+
+                case 'cold':
+                case 'winter':
+                    // Fists shaking near shoulders - check if hands near shoulder level
+                    const palmBase = handLandmarks[0];
+                    return palmBase.y > leftShoulder.y - threshold &&
+                           palmBase.y < leftShoulder.y + threshold;
+
+                case 'thanksgiving':
+                    // Hands at chin
+                    return dist(thumbTip.x, thumbTip.y, chinX, chinY) < threshold * 1.2;
+
+                default:
+                    // For signs we don't have specific detection for,
+                    // just check if hand shape is approximately correct
+                    return false;
+            }
+        }
+
+        // Helper: Check if hand is open (5-hand shape)
+        function isHandOpen(landmarks) {
+            const indexExt = landmarks[8].y < landmarks[6].y - 0.02;
+            const middleExt = landmarks[12].y < landmarks[10].y - 0.02;
+            const ringExt = landmarks[16].y < landmarks[14].y - 0.02;
+            const pinkyExt = landmarks[20].y < landmarks[18].y - 0.02;
+            const thumbExt = Math.abs(landmarks[4].x - landmarks[3].x) > 0.03 ||
+                            Math.abs(landmarks[4].y - landmarks[3].y) > 0.03;
+            return indexExt && middleExt && ringExt && pinkyExt && thumbExt;
         }
         
         // Start/Stop camera functions
@@ -2943,18 +3215,40 @@
                 // Initialize MediaPipe Hands
                 const handsInstance = new Hands({
                     locateFile: (file) => {
-                        console.log('Loading MediaPipe file:', file);
+                        console.log('Loading MediaPipe Hands file:', file);
                         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
                     }
                 });
-                
+
                 handsInstance.setOptions({
                     maxNumHands: 1,
                     modelComplexity: 1,
                     minDetectionConfidence: 0.5,
                     minTrackingConfidence: 0.5
                 });
-                
+
+                // Initialize MediaPipe Pose for body tracking
+                const poseInst = new Pose({
+                    locateFile: (file) => {
+                        console.log('Loading MediaPipe Pose file:', file);
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                    }
+                });
+
+                poseInst.setOptions({
+                    modelComplexity: 0, // Use lite model for speed
+                    smoothLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+
+                // Store pose results
+                poseInst.onResults((results) => {
+                    if (results.poseLandmarks) {
+                        currentPoseLandmarks = results.poseLandmarks;
+                    }
+                });
+
                 handsInstance.onResults((results) => {
                     if (mode === 'test') {
                         onTestResults(results);
@@ -2962,19 +3256,27 @@
                         onPracticeResults(results);
                     }
                 });
-                
+
                 // Wait for MediaPipe to initialize
                 await handsInstance.initialize();
                 console.log('MediaPipe Hands initialized');
-                
-                // Store the hands instance
+
+                await poseInst.initialize();
+                console.log('MediaPipe Pose initialized');
+
+                // Store instances
                 hands = handsInstance;
-                
+                poseInstance = poseInst;
+
                 // Set up the processing loop
                 const processFrame = async () => {
                     if ((mode === 'test' && testCameraActive) || (mode === 'practice' && practiceCameraActive)) {
                         if (video.readyState >= 2) {
-                            await hands.send({ image: video });
+                            // Send to both hands and pose detection
+                            await Promise.all([
+                                hands.send({ image: video }),
+                                poseInstance.send({ image: video })
+                            ]);
                         }
                         requestAnimationFrame(processFrame);
                     }
@@ -3007,29 +3309,32 @@
         
         function stopCamera(mode) {
             console.log('Stopping camera for mode:', mode);
-            
+
             const video = document.getElementById(mode + 'Video');
             const btn = document.getElementById(mode + 'CameraBtn');
             const placeholder = document.getElementById(mode + 'Placeholder');
-            
+
             // Stop the camera active flag first to stop the processing loop
             if (mode === 'test') {
                 testCameraActive = false;
             } else {
                 practiceCameraActive = false;
             }
-            
+
             // Stop video stream
             if (video.srcObject) {
                 video.srcObject.getTracks().forEach(track => track.stop());
                 video.srcObject = null;
             }
-            
+
+            // Clear pose landmarks
+            currentPoseLandmarks = null;
+
             // Clear the canvas
             const canvas = document.getElementById(mode + 'Canvas');
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             // Update UI
             placeholder.style.display = 'flex';
             btn.textContent = 'Start Camera';
