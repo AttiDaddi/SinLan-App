@@ -541,6 +541,81 @@
             margin: 0;
         }
 
+        /* Performance Toggle */
+        .performance-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--warm-white);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .performance-toggle-label {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .performance-toggle-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .performance-toggle-desc {
+            font-size: 11px;
+            color: var(--ink-muted);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: var(--coral);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
         /* Section Dividers */
         .section-label {
             font-size: 11px;
@@ -927,6 +1002,18 @@
                 </div>
             </div>
 
+            <!-- Body Skeleton Toggle -->
+            <div class="performance-toggle">
+                <div class="performance-toggle-label">
+                    <span class="performance-toggle-title">Body Skeleton</span>
+                    <span class="performance-toggle-desc">Enable for signs like Mother/Father (slower)</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="testSkeletonToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
             <div class="card">
                 <div class="camera-wrapper">
                     <video id="testVideo" autoplay playsinline></video>
@@ -978,7 +1065,19 @@
                     <p>The camera uses hand-tracking technology to detect your hand positions and recognize the ASL signs you're making. Your video is processed locally and never stored or sent anywhere.</p>
                 </div>
             </div>
-            
+
+            <!-- Body Skeleton Toggle -->
+            <div class="performance-toggle">
+                <div class="performance-toggle-label">
+                    <span class="performance-toggle-title">Body Skeleton</span>
+                    <span class="performance-toggle-desc">Enable for signs like Mother/Father (slower)</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="practiceSkeletonToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
             <div class="card">
                 <div class="camera-wrapper">
                     <video id="practiceVideo" autoplay playsinline></video>
@@ -1401,6 +1500,12 @@
         let currentPoseLandmarks = null;
         let useHolisticMode = true; // Enable body skeleton detection
 
+        // Performance optimization settings
+        let frameSkipCount = 0;
+        const FRAME_SKIP = 2; // Process every 2nd frame (set to 1 for no skipping)
+        const VIDEO_WIDTH = 480; // Reduced from 640
+        const VIDEO_HEIGHT = 360; // Reduced from 480
+
         // DOM Elements
         const modeTabs = document.querySelectorAll('.mode-tab');
         const panels = document.querySelectorAll('.panel');
@@ -1800,7 +1905,7 @@
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+                    video: { facingMode: 'user', width: { ideal: VIDEO_WIDTH }, height: { ideal: VIDEO_HEIGHT } }
                 });
                 video.srcObject = stream;
 
@@ -1813,17 +1918,17 @@
 
                 // Use Holistic for body skeleton detection
                 if (useHolisticMode) {
-                    console.log('Phrases camera: Initializing MediaPipe Holistic...');
+                    console.log('Phrases camera: Initializing MediaPipe Holistic (lite mode)...');
                     const holisticInstance = new Holistic({
                         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
                     });
 
                     holisticInstance.setOptions({
-                        modelComplexity: 1,
+                        modelComplexity: 0, // Lite mode for better performance
                         smoothLandmarks: true,
                         enableSegmentation: false,
                         smoothSegmentation: false,
-                        refineFaceLandmarks: true,
+                        refineFaceLandmarks: false, // Disabled for performance
                         minDetectionConfidence: 0.5,
                         minTrackingConfidence: 0.5
                     });
@@ -1836,7 +1941,12 @@
 
                     const processFrame = async () => {
                         if (phrasesCameraActive && video.readyState >= 2) {
-                            await phrasesHolistic.send({ image: video });
+                            // Frame skipping for performance
+                            frameSkipCount++;
+                            if (frameSkipCount >= FRAME_SKIP) {
+                                frameSkipCount = 0;
+                                await phrasesHolistic.send({ image: video });
+                            }
                         }
                         if (phrasesCameraActive) {
                             requestAnimationFrame(processFrame);
@@ -3176,17 +3286,17 @@
             
             try {
                 console.log('Starting camera for mode:', mode);
-                
-                // Get camera stream first
+
+                // Get camera stream first (reduced resolution for performance)
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'user', 
-                        width: { ideal: 640 }, 
-                        height: { ideal: 480 } 
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: VIDEO_WIDTH },
+                        height: { ideal: VIDEO_HEIGHT }
                     }
                 });
                 video.srcObject = stream;
-                
+
                 // Wait for video to be ready
                 await new Promise((resolve) => {
                     video.onloadedmetadata = () => {
@@ -3194,14 +3304,14 @@
                         resolve();
                     };
                 });
-                
+
                 console.log('Video ready:', video.videoWidth, 'x', video.videoHeight);
 
                 // Initialize MediaPipe - use Holistic for body skeleton or Hands for hand-only
                 let mediapipeInstance;
 
                 if (useHolisticMode) {
-                    console.log('Initializing MediaPipe Holistic (body skeleton mode)...');
+                    console.log('Initializing MediaPipe Holistic (lite mode for performance)...');
                     mediapipeInstance = new Holistic({
                         locateFile: (file) => {
                             console.log('Loading MediaPipe Holistic file:', file);
@@ -3210,11 +3320,11 @@
                     });
 
                     mediapipeInstance.setOptions({
-                        modelComplexity: 1,
+                        modelComplexity: 0, // Lite mode - much faster
                         smoothLandmarks: true,
                         enableSegmentation: false,
                         smoothSegmentation: false,
-                        refineFaceLandmarks: true,
+                        refineFaceLandmarks: false, // Disabled for performance
                         minDetectionConfidence: 0.5,
                         minTrackingConfidence: 0.5
                     });
@@ -3259,14 +3369,19 @@
                     hands = mediapipeInstance;
                 }
                 
-                // Set up the processing loop
+                // Set up the processing loop with frame skipping for performance
                 const processFrame = async () => {
                     if ((mode === 'test' && testCameraActive) || (mode === 'practice' && practiceCameraActive)) {
                         if (video.readyState >= 2) {
-                            // Use holistic or hands based on mode
-                            const instance = useHolisticMode ? holistic : hands;
-                            if (instance) {
-                                await instance.send({ image: video });
+                            // Frame skipping for better performance
+                            frameSkipCount++;
+                            if (frameSkipCount >= FRAME_SKIP) {
+                                frameSkipCount = 0;
+                                // Use holistic or hands based on mode
+                                const instance = useHolisticMode ? holistic : hands;
+                                if (instance) {
+                                    await instance.send({ image: video });
+                                }
                             }
                         }
                         requestAnimationFrame(processFrame);
@@ -3344,7 +3459,43 @@
                 startCamera('practice');
             }
         });
-        
+
+        // Body Skeleton Toggle Event Listeners
+        function updateSkeletonMode(enabled) {
+            useHolisticMode = enabled;
+            // Sync both toggles
+            const testToggle = document.getElementById('testSkeletonToggle');
+            const practiceToggle = document.getElementById('practiceSkeletonToggle');
+            if (testToggle) testToggle.checked = enabled;
+            if (practiceToggle) practiceToggle.checked = enabled;
+
+            // If camera is active, notify user to restart
+            if (testCameraActive || practiceCameraActive) {
+                const msg = enabled
+                    ? 'Body skeleton enabled. Restart camera to apply.'
+                    : 'Fast mode enabled. Restart camera to apply.';
+                console.log(msg);
+                // Update feedback banner if visible
+                const testFb = document.getElementById('testFeedback');
+                const practiceFb = document.getElementById('practiceFeedback');
+                if (testCameraActive && testFb) {
+                    testFb.textContent = msg;
+                    testFb.className = 'feedback-banner prompt';
+                }
+                if (practiceCameraActive && practiceFb) {
+                    practiceFb.textContent = msg;
+                    practiceFb.className = 'feedback-banner prompt';
+                }
+            }
+        }
+
+        document.getElementById('testSkeletonToggle')?.addEventListener('change', (e) => {
+            updateSkeletonMode(e.target.checked);
+        });
+
+        document.getElementById('practiceSkeletonToggle')?.addEventListener('change', (e) => {
+            updateSkeletonMode(e.target.checked);
+        });
 
 
         // Detect open palm gesture (for adding space)
