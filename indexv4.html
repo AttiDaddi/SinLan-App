@@ -915,6 +915,29 @@
             color: var(--sage);
         }
 
+        /* Disclaimer */
+        .disclaimer {
+            margin-top: 40px;
+            padding: 20px;
+            background: var(--warm-white);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .disclaimer-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        .disclaimer-text {
+            font-size: 12px;
+            color: var(--ink-muted);
+            line-height: 1.6;
+        }
+
     </style>
 </head>
 <body>
@@ -1219,6 +1242,14 @@
             <p class="section-label">Emergency</p>
             <div class="phrase-grid" id="emergencyGrid"></div>
         </section>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            <div class="disclaimer-title">Disclaimer</div>
+            <div class="disclaimer-text">
+                This app was created to the best of my ability as a learning tool. Please verify all signs with qualified ASL resources, as accuracy may vary. All data is processed and stored locally on your device - nothing is uploaded or stored on external servers. Your privacy is fully protected.
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1322,11 +1353,11 @@
             {id: 'easter', name: 'Easter', type: 'holiday', desc: 'E-hands twist at wrists', steps: ['Both hands in E shape', 'Twist back and forth', 'At wrist level']},
             {id: 'valentine', name: 'Valentine', type: 'holiday', desc: 'Draw heart on chest', steps: ['Both middle fingers', 'Draw heart shape on chest', 'Start at top of heart']}
         ];
-        
-        // Common ASL Phrases
+
+        // Common ASL Phrases (only phrases with GIF references)
         const PHRASES = [
             // ===== GREETINGS & BASICS =====
-            { id: 'hello', text: 'Hello', category: 'greetings', letters: ['H', 'E', 'L', 'L', 'O'], 
+            { id: 'hello', text: 'Hello', category: 'greetings', letters: ['H', 'E', 'L', 'L', 'O'],
               description: 'A friendly greeting',
               gifId: '3o7TKNKOfKlIhbD3gY',
               steps: ['Wave your open hand side to side near your face', 'Or fingerspell H-E-L-L-O'] },
@@ -1358,29 +1389,17 @@
               description: 'Negative response',
               gifId: 'l4Jz4faxuS1FiSEV2',
               steps: ['Extend index and middle fingers', 'Snap them down to meet thumb', 'Quick snapping motion'] },
-              
+
             // ===== QUESTIONS =====
             { id: 'howareyou', text: 'How are you?', category: 'questions', letters: ['H', 'O', 'W', 'A', 'R', 'E', 'Y', 'O', 'U'],
               description: 'Ask about wellbeing',
               gifId: '26FLgm33ve3iUexZC',
               steps: ['Point to the person (YOU)', 'Make curved hands, palms up', 'Move up and down alternating', 'Raise eyebrows (question face)'] },
-            { id: 'whatname', text: 'What is your name?', category: 'questions', letters: ['W', 'H', 'A', 'T', 'N', 'A', 'M', 'E'],
-              description: "Ask someone's name",
-              gifId: null,
-              steps: ['Point to person', 'Sign NAME (tap H fingers together)', 'Sign WHAT (shake open palms)', 'Use questioning expression'] },
             { id: 'wherebathroom', text: 'Where is the bathroom?', category: 'questions', letters: ['B', 'A', 'T', 'H', 'R', 'O', 'O', 'M'],
               description: 'Ask for restroom location',
               gifId: 'l0MYKTHdq5SE9KV44',
               steps: ['Sign WHERE (shake index finger side to side)', 'Then sign BATHROOM (shake T handshape)', 'Use questioning expression'] },
-            { id: 'whattime', text: 'What time is it?', category: 'questions', letters: ['T', 'I', 'M', 'E'],
-              description: 'Ask about the time',
-              gifId: null,
-              steps: ['Point to wrist (where watch would be)', 'Sign WHAT with questioning face', 'Raise eyebrows'] },
-            { id: 'howwasday', text: 'How was your day?', category: 'questions', letters: ['D', 'A', 'Y'],
-              description: 'Ask about their day',
-              gifId: null,
-              steps: ['Sign YOUR (point to person)', 'Sign DAY (point up, arc down)', 'Sign HOW (knuckles together, twist out)', 'Questioning expression'] },
-              
+
             // ===== FEELINGS & STATES =====
             { id: 'happy', text: 'Happy', category: 'feelings', letters: ['H', 'A', 'P', 'P', 'Y'],
               description: 'Express happiness',
@@ -1402,7 +1421,7 @@
               description: 'Express confusion',
               gifId: '26FL0X4d3Epuecpj2',
               steps: ['Touch forehead with index finger', 'Then move away while closing into fist', 'Shake head slightly'] },
-              
+
             // ===== EVERYDAY NEEDS =====
             { id: 'help', text: 'Help', category: 'needs', letters: ['H', 'E', 'L', 'P'],
               description: 'Ask for assistance',
@@ -1424,58 +1443,18 @@
               description: 'Ask someone to wait',
               gifId: 'l0MYSzYfva1UzKyD6',
               steps: ['Both hands up, palms facing you', 'Wiggle fingers', 'Patient waiting gesture'] },
-              
-            // ===== ABOUT ME =====
-            { id: 'myname', text: 'My name is...', category: 'aboutme', letters: ['M', 'Y', 'N', 'A', 'M', 'E'],
-              description: 'Introduce yourself',
-              gifId: null,
-              steps: ['Point to yourself (MY)', 'Then tap H fingers together (NAME)', 'Then fingerspell your name'] },
-            { id: 'iloveyou', text: 'I Love You', category: 'aboutme', letters: ['I', 'L', 'Y'],
-              description: 'Express love (one sign!)',
-              gifId: null,
-              steps: ['Extend thumb, index, and pinky', 'Keep middle and ring fingers down', 'Palm faces outward', 'This is the ILY sign - combines I, L, Y'] },
-            { id: 'nicemeet', text: 'Nice to meet you', category: 'aboutme', letters: ['N', 'I', 'C', 'E', 'M', 'E', 'E', 'T'],
-              description: 'Greeting when meeting someone',
-              gifId: null,
-              steps: ['Sign NICE (brush palm across other palm)', 'Sign MEET (two index fingers come together)', 'Point to person'] },
-            { id: 'learnasl', text: "I'm learning ASL", category: 'aboutme', letters: ['L', 'E', 'A', 'R', 'N', 'A', 'S', 'L'],
-              description: 'Tell them you are learning',
-              gifId: null,
-              steps: ['Point to yourself (I)', 'Sign LEARN (pull knowledge from palm to head)', 'Fingerspell A-S-L'] },
-              
+
             // ===== WEATHER & SMALL TALK =====
             { id: 'weather', text: 'What is the weather?', category: 'smalltalk', letters: ['W', 'E', 'A', 'T', 'H', 'E', 'R'],
               description: 'Ask about weather',
               gifId: '3o6Ztgc9cktcGfLTH2',
               steps: ['Both W hands', 'Twist back and forth', 'Moving downward', 'Like weather changing'] },
-            { id: 'seeyoulater', text: 'See you later', category: 'smalltalk', letters: ['S', 'E', 'E', 'Y', 'O', 'U'],
-              description: 'Casual goodbye',
-              gifId: null,
-              steps: ['Point to your eye (SEE)', 'Point to person (YOU)', 'Sign LATER (L hand, thumb moves forward)'] },
-              
-            // ===== PETS & ANIMALS =====
-            { id: 'petdog', text: 'Can I pet your dog?', category: 'pets', letters: ['D', 'O', 'G', 'P', 'E', 'T'],
-              description: 'Ask to pet a dog',
-              gifId: null,
-              steps: ['Sign DOG (snap fingers, pat leg)', 'Sign YOUR (point to person)', 'Sign PET (stroke back of hand)', 'Sign CAN (fists move down)', 'Questioning expression'] },
-            { id: 'havepet', text: 'Do you have a pet?', category: 'pets', letters: ['P', 'E', 'T'],
-              description: 'Ask about pets',
-              gifId: null,
-              steps: ['Sign YOU (point to person)', 'Sign HAVE (hands to chest)', 'Sign PET (stroke back of hand)', 'Questioning expression'] },
-              
+
             // ===== EMERGENCY =====
-            { id: 'emergency', text: 'Emergency!', category: 'emergency', letters: ['9', '1', '1'],
-              description: 'Signal emergency',
-              gifId: null,
-              steps: ['Wave both hands frantically', 'Or fingerspell 9-1-1', 'Show urgent expression'] },
             { id: 'needhelp', text: 'I need help', category: 'emergency', letters: ['H', 'E', 'L', 'P'],
               description: 'Urgent request for help',
               gifId: '3oz8xxZjw8HJxLcmD6',
-              steps: ['Point to yourself', 'Sign NEED (X hand bends down)', 'Sign HELP (thumbs up on palm, lift)', 'Urgent expression'] },
-            { id: 'areyouok', text: 'Are you okay?', category: 'emergency', letters: ['O', 'K'],
-              description: 'Check on someone',
-              gifId: null,
-              steps: ['Sign YOU (point to person)', 'Sign OK (O-K fingerspell or OK sign)', 'Concerned expression', 'Raise eyebrows'] }
+              steps: ['Point to yourself', 'Sign NEED (X hand bends down)', 'Sign HELP (thumbs up on palm, lift)', 'Urgent expression'] }
         ];
         
         // State
