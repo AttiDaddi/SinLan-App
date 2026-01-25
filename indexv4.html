@@ -175,12 +175,9 @@
         .sign-image {
             width: 288px;
             height: 288px;
-            object-fit: cover;
-            object-position: center 25%;
+            object-fit: contain;
             margin: 0 auto 12px;
             filter: contrast(1.1);
-            /* Crop to hide text that may appear in image */
-            clip-path: inset(0 0 12% 0);
         }
         
         .sign-letter {
@@ -474,10 +471,7 @@
         .sign-tile img {
             width: 100%;
             height: 70%;
-            object-fit: cover;
-            object-position: center 30%;
-            /* Crop to hide text that may appear in image */
-            clip-path: inset(0 0 15% 0);
+            object-fit: contain;
         }
         
         .sign-tile-label {
@@ -735,9 +729,7 @@
         #translateReference .sign-tile img {
             height: 55px;
             width: auto;
-            object-fit: cover;
-            object-position: center 30%;
-            clip-path: inset(0 0 15% 0);
+            object-fit: contain;
         }
         
         #translateReference .sign-tile-label {
@@ -1118,6 +1110,23 @@
             
             <p class="section-label">Emergency</p>
             <div class="phrase-grid" id="emergencyGrid"></div>
+
+            <p class="section-label" style="margin-top: 32px; font-size: 13px; color: var(--coral);">Vocabulary</p>
+
+            <p class="section-label">Family</p>
+            <div class="phrase-grid" id="familyPhraseGrid"></div>
+
+            <p class="section-label">Colors</p>
+            <div class="phrase-grid" id="colorsPhraseGrid"></div>
+
+            <p class="section-label">Days of the Week</p>
+            <div class="phrase-grid" id="daysPhraseGrid"></div>
+
+            <p class="section-label">Seasons & Weather</p>
+            <div class="phrase-grid" id="seasonsPhraseGrid"></div>
+
+            <p class="section-label">Holidays</p>
+            <div class="phrase-grid" id="holidaysPhraseGrid"></div>
         </section>
     </div>
 
@@ -1167,60 +1176,60 @@
             {id: '9', name: '9', type: 'number', desc: 'Index touches thumb', steps: ['Extend middle, ring, pinky up', 'Touch index to thumb', 'Like OK with fingers up']},
 
             // Family
-            {id: 'mother', name: 'Mother', type: 'family', desc: 'Thumb on chin, open hand', steps: ['Open hand with fingers spread', 'Touch thumb to chin', 'Keep palm facing left']},
-            {id: 'father', name: 'Father', type: 'family', desc: 'Thumb on forehead, open hand', steps: ['Open hand with fingers spread', 'Touch thumb to forehead', 'Keep palm facing left']},
-            {id: 'sister', name: 'Sister', type: 'family', desc: 'A-hand from chin, then 1-hands together', steps: ['Start with A-hand at chin', 'Move down to index fingers together', 'Both hands point forward']},
-            {id: 'brother', name: 'Brother', type: 'family', desc: 'A-hand from forehead, then 1-hands together', steps: ['Start with A-hand at forehead', 'Move down to index fingers together', 'Both hands point forward']},
-            {id: 'baby', name: 'Baby', type: 'family', desc: 'Rock arms like holding baby', steps: ['Place one arm over the other', 'Rock arms side to side', 'Like cradling a baby']},
-            {id: 'family', name: 'Family', type: 'family', desc: 'F-hands circle outward', steps: ['Both hands in F shape', 'Start together in front', 'Circle outward to meet again']},
-            {id: 'grandmother', name: 'Grandmother', type: 'family', desc: 'Mother sign with two bounces forward', steps: ['Do the mother sign (thumb on chin)', 'Bounce hand forward twice', 'Shows generational distance']},
-            {id: 'grandfather', name: 'Grandfather', type: 'family', desc: 'Father sign with two bounces forward', steps: ['Do the father sign (thumb on forehead)', 'Bounce hand forward twice', 'Shows generational distance']},
+            {id: 'mother', name: 'Mother', type: 'family', desc: 'Open 5-hand, thumb taps chin', steps: ['Make open hand with fingers spread (5-shape)', 'Touch thumb to chin', 'Can tap twice']},
+            {id: 'father', name: 'Father', type: 'family', desc: 'Open 5-hand, thumb taps forehead', steps: ['Make open hand with fingers spread (5-shape)', 'Touch thumb to forehead', 'Can tap twice']},
+            {id: 'sister', name: 'Sister', type: 'family', desc: 'Female marker + SAME', steps: ['Start with thumb on chin (female marker)', 'Move to index fingers together (SAME)', 'Both index fingers pointing forward']},
+            {id: 'brother', name: 'Brother', type: 'family', desc: 'Male marker + SAME', steps: ['Start with thumb on forehead (male marker)', 'Move to index fingers together (SAME)', 'Both index fingers pointing forward']},
+            {id: 'baby', name: 'Baby', type: 'family', desc: 'Rock arms like cradling baby', steps: ['Place one arm over the other', 'Rock arms side to side', 'Like cradling a baby']},
+            {id: 'family', name: 'Family', type: 'family', desc: 'F-hands circle outward and meet', steps: ['Both hands in F shape (index touches thumb)', 'Start together, thumbs touching', 'Circle outward until pinkies meet']},
+            {id: 'grandmother', name: 'Grandmother', type: 'family', desc: 'Mother sign + two bounces forward', steps: ['Start with MOTHER (thumb on chin)', 'Bounce hand forward in two arcs', 'Shows generational distance']},
+            {id: 'grandfather', name: 'Grandfather', type: 'family', desc: 'Father sign + two bounces forward', steps: ['Start with FATHER (thumb on forehead)', 'Bounce hand forward in two arcs', 'Shows generational distance']},
 
             // Colors
-            {id: 'red', name: 'Red', type: 'color', desc: 'Index finger brushes down lips', steps: ['Point index finger', 'Touch to lips', 'Brush downward once or twice']},
-            {id: 'blue', name: 'Blue', type: 'color', desc: 'B-hand shakes side to side', steps: ['Make B handshape', 'Shake hand side to side', 'Palm faces outward']},
-            {id: 'green', name: 'Green', type: 'color', desc: 'G-hand shakes side to side', steps: ['Make G handshape', 'Shake hand side to side', 'Twist at wrist']},
-            {id: 'yellow', name: 'Yellow', type: 'color', desc: 'Y-hand shakes side to side', steps: ['Make Y handshape (pinky and thumb out)', 'Shake hand side to side', 'Twist at wrist']},
-            {id: 'orange', name: 'Orange', type: 'color', desc: 'S-hand squeezes at chin', steps: ['Make S handshape (fist)', 'Place near chin', 'Squeeze open and closed']},
-            {id: 'purple', name: 'Purple', type: 'color', desc: 'P-hand shakes side to side', steps: ['Make P handshape', 'Shake hand side to side', 'Twist at wrist']},
-            {id: 'black', name: 'Black', type: 'color', desc: 'Index finger draws across forehead', steps: ['Extend index finger', 'Draw across forehead', 'From one side to the other']},
-            {id: 'white', name: 'White', type: 'color', desc: 'Open hand pulls from chest', steps: ['Place open hand on chest', 'Pull hand away', 'Close fingers as you pull']},
-            {id: 'pink', name: 'Pink', type: 'color', desc: 'P-hand brushes down lips', steps: ['Make P handshape', 'Middle finger touches lips', 'Brush downward']},
-            {id: 'brown', name: 'Brown', type: 'color', desc: 'B-hand slides down cheek', steps: ['Make B handshape', 'Place on cheek', 'Slide downward']},
+            {id: 'red', name: 'Red', type: 'color', desc: 'Index finger brushes down from lips', steps: ['Extend index finger', 'Touch fingertip to lips', 'Brush downward once or twice']},
+            {id: 'blue', name: 'Blue', type: 'color', desc: 'B-hand shakes side to side', steps: ['Make B handshape (flat hand, thumb tucked)', 'Hold at shoulder height', 'Shake/twist side to side from wrist']},
+            {id: 'green', name: 'Green', type: 'color', desc: 'G-hand shakes side to side', steps: ['Make G handshape (index and thumb extended)', 'Hold in front of body', 'Shake/twist side to side from wrist']},
+            {id: 'yellow', name: 'Yellow', type: 'color', desc: 'Y-hand shakes side to side', steps: ['Make Y handshape (thumb and pinky out)', 'Hold at shoulder height', 'Shake/twist side to side from wrist']},
+            {id: 'orange', name: 'Orange', type: 'color', desc: 'Fist squeezes near chin', steps: ['Make a loose fist (C or S shape)', 'Hold near chin', 'Squeeze open and closed like squeezing orange']},
+            {id: 'purple', name: 'Purple', type: 'color', desc: 'P-hand shakes side to side', steps: ['Make P handshape', 'Hold at shoulder height', 'Shake/twist side to side from wrist']},
+            {id: 'black', name: 'Black', type: 'color', desc: 'Index finger slides across forehead', steps: ['Extend index finger sideways', 'Place on forehead', 'Slide across eyebrow area']},
+            {id: 'white', name: 'White', type: 'color', desc: 'Open hand on chest pulls away and closes', steps: ['Place open 5-hand on chest', 'Pull hand away from body', 'Close fingers together as you pull']},
+            {id: 'pink', name: 'Pink', type: 'color', desc: 'P-hand, middle finger brushes down lips', steps: ['Make P handshape', 'Touch middle finger to lips', 'Brush downward (like RED but with P)']},
+            {id: 'brown', name: 'Brown', type: 'color', desc: 'B-hand slides down cheek', steps: ['Make B handshape', 'Place index side on cheek', 'Slide downward along cheek']},
 
             // Days of the Week
-            {id: 'monday', name: 'Monday', type: 'day', desc: 'M-hand circles', steps: ['Make M handshape', 'Small circle motion', 'Palm faces you']},
-            {id: 'tuesday', name: 'Tuesday', type: 'day', desc: 'T-hand circles', steps: ['Make T handshape', 'Small circle motion', 'Palm faces you']},
-            {id: 'wednesday', name: 'Wednesday', type: 'day', desc: 'W-hand circles', steps: ['Make W handshape (3 fingers up)', 'Small circle motion', 'Palm faces you']},
-            {id: 'thursday', name: 'Thursday', type: 'day', desc: 'H-hand circles (or TH)', steps: ['Make H handshape', 'Small circle motion', 'Some use T-H combination']},
-            {id: 'friday', name: 'Friday', type: 'day', desc: 'F-hand circles', steps: ['Make F handshape', 'Small circle motion', 'Palm faces you']},
-            {id: 'saturday', name: 'Saturday', type: 'day', desc: 'S-hand circles', steps: ['Make S handshape (fist)', 'Small circle motion', 'Palm faces you']},
-            {id: 'sunday', name: 'Sunday', type: 'day', desc: 'Both open hands push outward', steps: ['Both hands open, palms out', 'Push outward and down', 'Peaceful, calm motion']},
-            {id: 'today', name: 'Today', type: 'day', desc: 'Y-hands drop down', steps: ['Both hands in Y shape', 'Start at shoulder height', 'Drop down together']},
-            {id: 'tomorrow', name: 'Tomorrow', type: 'day', desc: 'Thumb on cheek moves forward', steps: ['A-hand with thumb up', 'Touch thumb to cheek', 'Arc forward']},
-            {id: 'yesterday', name: 'Yesterday', type: 'day', desc: 'Thumb touches cheek then chin', steps: ['A-hand or Y-hand', 'Touch thumb to cheek', 'Then touch to chin']},
+            {id: 'monday', name: 'Monday', type: 'day', desc: 'M-hand makes small circle', steps: ['Make M handshape', 'Palm facing you', 'Small circular motion']},
+            {id: 'tuesday', name: 'Tuesday', type: 'day', desc: 'T-hand makes small circle', steps: ['Make T handshape', 'Palm facing you', 'Small circular motion']},
+            {id: 'wednesday', name: 'Wednesday', type: 'day', desc: 'W-hand makes small circle', steps: ['Make W handshape (3 middle fingers up)', 'Palm facing you', 'Small circular motion']},
+            {id: 'thursday', name: 'Thursday', type: 'day', desc: 'H-hand circles, or T-H sequence', steps: ['Make H handshape (or start with T then H)', 'Palm facing you', 'Small circular motion']},
+            {id: 'friday', name: 'Friday', type: 'day', desc: 'F-hand makes small circle', steps: ['Make F handshape', 'Palm facing you', 'Small circular motion']},
+            {id: 'saturday', name: 'Saturday', type: 'day', desc: 'S-hand makes small circle', steps: ['Make S handshape (fist)', 'Palm facing you', 'Small circular motion']},
+            {id: 'sunday', name: 'Sunday', type: 'day', desc: 'Both open hands, palms out, move outward', steps: ['Both hands in open 5 shape', 'Palms facing outward', 'Move hands outward and slightly down, or circular']},
+            {id: 'today', name: 'Today', type: 'day', desc: 'Y-hands or NOW+DAY', steps: ['Both hands in Y shape (or sign NOW)', 'Start at shoulder height', 'Drop down together']},
+            {id: 'tomorrow', name: 'Tomorrow', type: 'day', desc: 'Thumb on cheek arcs forward', steps: ['A-hand with thumb extended', 'Touch thumb to cheek', 'Arc thumb forward']},
+            {id: 'yesterday', name: 'Yesterday', type: 'day', desc: 'Thumb touches cheek, then near ear', steps: ['A-hand or Y-hand', 'Touch thumb to cheek', 'Move back toward ear/jaw']},
 
             // Seasons
-            {id: 'spring', name: 'Spring', type: 'season', desc: 'Hand pushes through other hand like plant growing', steps: ['Non-dominant hand in C shape', 'Dominant hand pushes up through', 'Like a plant sprouting']},
-            {id: 'summer', name: 'Summer', type: 'season', desc: 'Index finger wipes across forehead', steps: ['Extend index finger', 'Draw across forehead', 'Like wiping sweat']},
-            {id: 'fall', name: 'Fall/Autumn', type: 'season', desc: 'Flat hand brushes down forearm', steps: ['Hold non-dominant arm up', 'Brush dominant hand down arm', 'Like leaves falling']},
-            {id: 'winter', name: 'Winter', type: 'season', desc: 'W-hands or fists shake (shivering)', steps: ['Both hands in W or S shape', 'Hold in front of body', 'Shake like shivering from cold']},
-            {id: 'weather', name: 'Weather', type: 'season', desc: 'W-hands twist down', steps: ['Both hands in W shape', 'Start at top', 'Twist and move downward']},
-            {id: 'hot', name: 'Hot', type: 'season', desc: 'Claw hand pulls away from mouth', steps: ['Claw hand at mouth', 'Pull away and turn', 'Like something too hot to eat']},
-            {id: 'cold', name: 'Cold', type: 'season', desc: 'Fists shake near shoulders', steps: ['Both hands in fists', 'Hold near shoulders', 'Shake like shivering']},
-            {id: 'rain', name: 'Rain', type: 'season', desc: 'Claw hands move down repeatedly', steps: ['Both hands in claw shape', 'Move down repeatedly', 'Like rain falling']},
-            {id: 'snow', name: 'Snow', type: 'season', desc: 'Fingers wiggle while hands float down', steps: ['Open hands with spread fingers', 'Wiggle fingers', 'Float hands downward']},
-            {id: 'sun', name: 'Sun', type: 'season', desc: 'C-hand at side of head opens', steps: ['C-hand near side of head', 'Open hand outward', 'Like rays of sun']},
+            {id: 'spring', name: 'Spring', type: 'season', desc: 'Hand opens up through other hand', steps: ['Non-dominant hand in loose fist (C shape)', 'Dominant hand pushes up through it', 'Open to 5-hand like plant sprouting']},
+            {id: 'summer', name: 'Summer', type: 'season', desc: 'Bent index finger wipes across forehead', steps: ['Bend index finger into hook shape', 'Place on forehead', 'Drag across forehead (like wiping sweat)']},
+            {id: 'fall', name: 'Fall/Autumn', type: 'season', desc: 'Hand brushes down forearm near elbow', steps: ['Hold non-dominant arm up', 'Dominant hand (4 or flat) brushes down arm', 'Near the elbow, like leaves falling']},
+            {id: 'winter', name: 'Winter', type: 'season', desc: 'Fists shake like shivering', steps: ['Both hands in S-fists (or W shape)', 'Hold in front of body', 'Shake back and forth like shivering from cold']},
+            {id: 'weather', name: 'Weather', type: 'season', desc: 'W-hands twist downward', steps: ['Both hands in W shape', 'Start high, palms facing each other', 'Twist and move downward']},
+            {id: 'hot', name: 'Hot', type: 'season', desc: 'Claw hand at mouth turns away', steps: ['Claw/C-hand at mouth', 'Turn and pull away quickly', 'Like spitting out something hot']},
+            {id: 'cold', name: 'Cold', type: 'season', desc: 'Fists shake near shoulders', steps: ['Both hands in S-fists', 'Hold near shoulders or chest', 'Shake like shivering from cold']},
+            {id: 'rain', name: 'Rain', type: 'season', desc: 'Claw hands move down repeatedly', steps: ['Both hands in claw/5-claw shape', 'Hold up high', 'Move down repeatedly like rain falling']},
+            {id: 'snow', name: 'Snow', type: 'season', desc: 'Wiggling fingers float downward', steps: ['Open hands with spread fingers (5-shape)', 'Wiggle fingers', 'Float hands downward like snowflakes']},
+            {id: 'sun', name: 'Sun', type: 'season', desc: 'C-hand above head opens outward', steps: ['C-hand up and to side of head', 'Open hand outward', 'Fingers spread like rays of sun']},
 
             // Holidays
-            {id: 'christmas', name: 'Christmas', type: 'holiday', desc: 'C-hand arcs from elbow', steps: ['Make C handshape', 'Place at elbow of other arm', 'Arc downward']},
-            {id: 'thanksgiving', name: 'Thanksgiving', type: 'holiday', desc: 'Both hands at chin move forward', steps: ['Flat hands touch chin', 'Move outward and down', 'Like giving thanks']},
-            {id: 'halloween', name: 'Halloween', type: 'holiday', desc: 'Both hands cover then reveal face', steps: ['Cover face with both hands', 'Pull away revealing face', 'Like peek-a-boo']},
-            {id: 'birthday', name: 'Birthday', type: 'holiday', desc: 'Middle finger touches chin then chest', steps: ['Middle finger of open hand', 'Touch chin then chest', 'Some add BIRTH + DAY']},
-            {id: 'holiday', name: 'Holiday', type: 'holiday', desc: 'Thumbs tap armpits twice', steps: ['Both hands in 5 shape', 'Thumbs tap armpits', 'Tap twice (relaxing)']},
-            {id: 'newyear', name: 'New Year', type: 'holiday', desc: 'NEW + YEAR combination', steps: ['Sign NEW (scoop motion)', 'Then sign YEAR (fists circle)', 'Combine both signs']},
-            {id: 'easter', name: 'Easter', type: 'holiday', desc: 'E-hands twist at wrists', steps: ['Both hands in E shape', 'Twist back and forth', 'At wrist level']},
-            {id: 'valentine', name: 'Valentine', type: 'holiday', desc: 'Draw heart on chest', steps: ['Both middle fingers', 'Draw heart shape on chest', 'Start at top of heart']}
+            {id: 'christmas', name: 'Christmas', type: 'holiday', desc: 'C-hand swoops up like Christmas tree', steps: ['Make C handshape', 'Start with forearm horizontal', 'Swoop up until forearm is vertical']},
+            {id: 'thanksgiving', name: 'Thanksgiving', type: 'holiday', desc: 'Hands at chin move forward twice', steps: ['Both flat hands touch chin', 'Move both hands forward', 'Repeat the forward motion (giving thanks)']},
+            {id: 'halloween', name: 'Halloween', type: 'holiday', desc: 'Hands cover then reveal face', steps: ['Cover face with both flat hands', 'Pull hands away to sides', 'Revealing face (like peek-a-boo/mask)']},
+            {id: 'birthday', name: 'Birthday', type: 'holiday', desc: 'Middle finger on chin drops to arm', steps: ['Middle finger touches chin', 'Bring hand down', 'Land on horizontal forearm']},
+            {id: 'holiday', name: 'Holiday', type: 'holiday', desc: 'Thumbs tap near armpits', steps: ['Both hands in 5 shape near chest', 'Thumbs tap near armpits/chest', 'Tap twice (like relaxing/vacation)']},
+            {id: 'newyear', name: 'New Year', type: 'holiday', desc: 'Combine NEW + YEAR signs', steps: ['Sign NEW: palm scoops up from other palm', 'Sign YEAR: fists circle around each other', 'Combine both signs']},
+            {id: 'easter', name: 'Easter', type: 'holiday', desc: 'E-hands twist back and forth', steps: ['Both hands in E shape', 'Hold in front of body', 'Twist both wrists back and forth']},
+            {id: 'valentine', name: 'Valentine', type: 'holiday', desc: 'Draw heart shape on chest', steps: ['Use both middle fingers (or index)', 'Draw heart shape on chest', 'Start at center top of heart, trace down']}
         ];
         
         // Common ASL Phrases
@@ -1657,17 +1666,26 @@
                 pets: document.getElementById('petsGrid'),
                 emergency: document.getElementById('emergencyGrid')
             };
-            
+
+            // Vocabulary grids
+            const vocabGrids = {
+                family: document.getElementById('familyPhraseGrid'),
+                color: document.getElementById('colorsPhraseGrid'),
+                day: document.getElementById('daysPhraseGrid'),
+                season: document.getElementById('seasonsPhraseGrid'),
+                holiday: document.getElementById('holidaysPhraseGrid')
+            };
+
             // Check if grids exist
             if (!grids.greetings) return;
-            
+
             PHRASES.forEach(phrase => {
                 const tile = document.createElement('div');
                 tile.className = 'phrase-tile';
-                
+
                 // Add video indicator if GIF available
                 const videoIcon = phrase.gifId ? '<span style="color: var(--sage);">▶</span>' : '';
-                
+
                 tile.innerHTML = `
                     <div>
                         <div class="phrase-tile-text">${phrase.text} ${videoIcon}</div>
@@ -1676,13 +1694,78 @@
                     <span style="font-size: 20px;">👉</span>
                 `;
                 tile.addEventListener('click', () => selectPhrase(phrase, tile));
-                
+
                 // Add to appropriate grid
                 const grid = grids[phrase.category];
                 if (grid) {
                     grid.appendChild(tile);
                 }
             });
+
+            // Populate vocabulary grids
+            const typeIcons = {
+                'family': '👨‍👩‍👧‍👦',
+                'color': '🎨',
+                'day': '📅',
+                'season': '🌤️',
+                'holiday': '🎉'
+            };
+
+            SIGNS.filter(s => ['family', 'color', 'day', 'season', 'holiday'].includes(s.type)).forEach(sign => {
+                const tile = document.createElement('div');
+                tile.className = 'phrase-tile vocab-phrase-tile';
+
+                tile.innerHTML = `
+                    <div>
+                        <div class="phrase-tile-text">${typeIcons[sign.type] || '📝'} ${sign.name}</div>
+                        <div class="phrase-tile-asl" style="font-size: 11px;">${sign.desc}</div>
+                    </div>
+                    <span style="font-size: 20px;">👉</span>
+                `;
+                tile.addEventListener('click', () => selectVocabSign(sign, tile));
+
+                // Add to appropriate grid
+                const grid = vocabGrids[sign.type];
+                if (grid) {
+                    grid.appendChild(tile);
+                }
+            });
+        }
+
+        // Select and display a vocabulary sign in Phrases mode
+        function selectVocabSign(sign, tile) {
+            // Remove active from all tiles
+            document.querySelectorAll('.phrase-tile').forEach(t => t.classList.remove('active'));
+            tile.classList.add('active');
+
+            // Show the phrase display card
+            const card = document.getElementById('phraseDisplayCard');
+            card.style.display = 'block';
+
+            // Update display
+            document.getElementById('phraseTitle').textContent = sign.name;
+            document.getElementById('phraseBadge').textContent = sign.type.charAt(0).toUpperCase() + sign.type.slice(1);
+            document.getElementById('phraseDescription').textContent = sign.desc;
+
+            // Hide GIF section for vocab (no videos)
+            document.getElementById('phraseGifWrapper').style.display = 'none';
+            document.getElementById('noGifMessage').style.display = 'block';
+            document.getElementById('noGifMessage').textContent = 'This is a vocabulary sign. See the steps below for how to sign it.';
+
+            // Update steps
+            const stepsContainer = document.getElementById('phraseSteps');
+            stepsContainer.innerHTML = `
+                <strong style="color: var(--gold);">How to sign "${sign.name}":</strong>
+                <ol style="margin: 8px 0 0 20px; color: var(--ink-light);">
+                    ${sign.steps.map(step => `<li style="margin-bottom: 4px;">${step}</li>`).join('')}
+                </ol>
+            `;
+
+            // Clear fingerspelling section for vocab signs
+            document.getElementById('phraseLettersContainer').innerHTML = '<p style="color: var(--ink-muted); font-size: 13px;">This is a conceptual sign, not fingerspelling.</p>';
+
+            // Scroll into view
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         // Select and display a phrase
