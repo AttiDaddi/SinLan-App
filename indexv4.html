@@ -22,8 +22,10 @@
             --coral-light: #FFEBE8;
             --sage: #7CA982;
             --sage-light: #E8F2EA;
-            --gold: #D4A84B;
-            --gold-light: #FFF8E7;
+            --gold: #F5B800;
+            --gold-light: #FFF4CC;
+            --yellow: #FFD93D;
+            --yellow-light: #FFF9E6;
             --shadow-soft: 0 4px 20px rgba(26, 23, 20, 0.06);
             --shadow-medium: 0 8px 40px rgba(26, 23, 20, 0.1);
             --radius-sm: 8px;
@@ -64,7 +66,7 @@
             letter-spacing: -0.02em;
         }
         
-        .logo span { color: var(--coral); }
+        .logo span { color: var(--gold); }
         
         .tagline {
             font-size: 13px;
@@ -107,8 +109,8 @@
         }
         
         .mode-tab.active {
-            background: var(--ink);
-            color: white;
+            background: var(--gold);
+            color: var(--ink);
         }
         
         .mode-tab.active .icon {
@@ -284,12 +286,13 @@
         }
         
         .btn-primary {
-            background: var(--ink);
-            color: white;
+            background: var(--gold);
+            color: var(--ink);
+            font-weight: 600;
         }
-        
+
         .btn-primary:hover {
-            background: var(--ink-light);
+            background: var(--yellow);
             transform: translateY(-1px);
         }
         
@@ -310,16 +313,18 @@
         }
         
         .btn-camera {
-            background: var(--coral);
-            color: white;
+            background: var(--gold);
+            color: var(--ink);
+            font-weight: 600;
         }
-        
+
         .btn-camera:hover {
-            background: #D14D3D;
+            background: var(--yellow);
         }
-        
+
         .btn-camera.active {
             background: var(--ink-muted);
+            color: white;
         }
         
         /* Camera Container */
@@ -411,8 +416,9 @@
         }
         
         .feedback-banner.success {
-            background: var(--sage-light);
-            color: var(--sage);
+            background: linear-gradient(135deg, var(--yellow-light) 0%, var(--gold-light) 100%);
+            color: var(--ink);
+            border: 2px solid var(--gold);
         }
         
         .feedback-banner.prompt {
@@ -609,7 +615,7 @@
         }
 
         .toggle-switch input:checked + .toggle-slider {
-            background-color: var(--coral);
+            background-color: var(--gold);
         }
 
         .toggle-switch input:checked + .toggle-slider:before {
@@ -913,6 +919,36 @@
         .badge-sage {
             background: var(--sage-light);
             color: var(--sage);
+        }
+
+        /* Celebratory Emoji Popup */
+        .celebration-emoji {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 64px;
+            z-index: 1000;
+            animation: celebrationPop 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes celebrationPop {
+            0% {
+                opacity: 0;
+                transform: translateY(-50%) scale(0.3);
+            }
+            20% {
+                opacity: 1;
+                transform: translateY(-50%) scale(1.2);
+            }
+            40% {
+                transform: translateY(-50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100%) scale(1);
+            }
         }
 
         /* Disclaimer */
@@ -1484,6 +1520,22 @@
         const FRAME_SKIP = 2; // Process every 2nd frame (set to 1 for no skipping)
         const VIDEO_WIDTH = 480; // Reduced from 640
         const VIDEO_HEIGHT = 360; // Reduced from 480
+
+        // Celebration emojis for correct signs
+        const CELEBRATION_EMOJIS = ['😊', '👍', '🎉', '⭐', '🌟', '👏', '💪', '🙌', '✨', '😄'];
+
+        function showCelebration() {
+            const emoji = CELEBRATION_EMOJIS[Math.floor(Math.random() * CELEBRATION_EMOJIS.length)];
+            const element = document.createElement('div');
+            element.className = 'celebration-emoji';
+            element.textContent = emoji;
+            document.body.appendChild(element);
+
+            // Remove after animation completes
+            setTimeout(() => {
+                element.remove();
+            }, 1500);
+        }
 
         // DOM Elements
         const modeTabs = document.querySelectorAll('.mode-tab');
@@ -3185,6 +3237,7 @@
                         document.getElementById('testTotal').textContent = testTotal;
                         document.getElementById('testFeedback').textContent = '✓ Correct!';
                         document.getElementById('testFeedback').className = 'feedback-banner success';
+                        showCelebration();
                         setTimeout(generateTestQuestion, 1500);
                     }
                 }
@@ -3241,6 +3294,7 @@
                         document.getElementById('practiceAttempts').textContent = practiceAttempts;
                         document.getElementById('practiceFeedback').textContent = `✓ Perfect ${practiceSign.name}!`;
                         document.getElementById('practiceFeedback').className = 'feedback-banner success';
+                        showCelebration();
                         setTimeout(() => {
                             if (practiceSign) {
                                 document.getElementById('practiceFeedback').textContent = `Practice: ${practiceSign.name}`;
