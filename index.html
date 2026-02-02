@@ -1048,12 +1048,133 @@
         }
 
 
+        /* View Toggle Button */
+        .header-top {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+        }
+
+        .view-toggle {
+            position: absolute;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: white;
+            border: 2px solid var(--ink-muted);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink);
+            transition: all 0.2s ease;
+        }
+
+        .view-toggle:hover {
+            border-color: var(--coral);
+            background: var(--coral-light);
+        }
+
+        .view-toggle.active {
+            background: var(--ink);
+            border-color: var(--ink);
+            color: white;
+        }
+
+        .view-icon {
+            font-size: 16px;
+        }
+
+        /* Desktop/Fullscreen Mode */
+        body.desktop-mode .container {
+            max-width: 1200px;
+            padding: 0 32px 100px;
+        }
+
+        body.desktop-mode .mode-nav {
+            max-width: 600px;
+            margin: 0 auto 24px;
+        }
+
+        body.desktop-mode .stats-row {
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
+        body.desktop-mode .translate-levels {
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
+        body.desktop-mode .translate-question-card {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        body.desktop-mode .translate-images {
+            gap: 20px;
+        }
+
+        body.desktop-mode .translate-images img {
+            width: 160px;
+            height: 160px;
+        }
+
+        body.desktop-mode .translate-input-area {
+            max-width: 500px;
+            margin: 0 auto 16px;
+        }
+
+        body.desktop-mode .sign-display {
+            max-width: 500px;
+            margin: 0 auto 16px;
+        }
+
+        body.desktop-mode .sign-image {
+            width: 350px;
+            height: 350px;
+        }
+
+        body.desktop-mode .card {
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        body.desktop-mode .nav-row {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        body.desktop-mode .progress-container {
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
+        /* Hide toggle on small screens */
+        @media (max-width: 600px) {
+            .view-toggle {
+                display: none;
+            }
+        }
+
+
     </style>
 </head>
 <body>
     <div class="app-container">
         <header class="header">
-            <h1 class="logo">ASL<span>Learn</span></h1>
+            <div class="header-top">
+                <h1 class="logo">ASL<span>Learn</span></h1>
+                <button id="viewToggle" class="view-toggle" title="Toggle Desktop View">
+                    <span class="view-icon">🖥️</span>
+                    <span class="view-label">Desktop</span>
+                </button>
+            </div>
             <p class="tagline">Master the American Sign Language alphabet</p>
         </header>
         
@@ -4214,6 +4335,36 @@
             document.getElementById('translateInput').disabled = true;
             document.getElementById('translateNext').style.display = 'block';
         }
+
+    
+        // ===== DESKTOP VIEW TOGGLE =====
+        function setupViewToggle() {
+            const toggle = document.getElementById('viewToggle');
+            if (!toggle) return;
+
+            // Check if user previously enabled desktop mode
+            if (localStorage.getItem('desktopMode') === 'true') {
+                document.body.classList.add('desktop-mode');
+                toggle.classList.add('active');
+                toggle.querySelector('.view-label').textContent = 'Mobile';
+                toggle.querySelector('.view-icon').textContent = '📱';
+            }
+
+            toggle.addEventListener('click', () => {
+                document.body.classList.toggle('desktop-mode');
+                const isDesktop = document.body.classList.contains('desktop-mode');
+                
+                toggle.classList.toggle('active', isDesktop);
+                toggle.querySelector('.view-label').textContent = isDesktop ? 'Mobile' : 'Desktop';
+                toggle.querySelector('.view-icon').textContent = isDesktop ? '📱' : '🖥️';
+                
+                // Remember preference
+                localStorage.setItem('desktopMode', isDesktop);
+            });
+        }
+
+        // Call setup on load
+        setupViewToggle();
 
     
     </script>
