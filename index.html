@@ -1089,70 +1089,149 @@
             font-size: 16px;
         }
 
-        /* Desktop/Fullscreen Mode */
+        /* Desktop/Fullscreen Mode - FULL WIDTH */
         body.desktop-mode .container {
-            max-width: 1200px;
-            padding: 0 32px 100px;
+            max-width: 100%;
+            padding: 0 48px 100px;
+        }
+
+        body.desktop-mode .header {
+            max-width: 100%;
         }
 
         body.desktop-mode .mode-nav {
+            max-width: 700px;
+            margin: 0 auto 24px;
+        }
+
+        body.desktop-mode .panel {
+            display: none;
+        }
+
+        body.desktop-mode .panel.active {
+            display: block;
+        }
+
+        /* Learn mode desktop */
+        body.desktop-mode .progress-container {
+            max-width: 100%;
+        }
+
+        body.desktop-mode .sign-display {
+            max-width: 100%;
+            padding: 40px;
+        }
+
+        body.desktop-mode .sign-image {
+            width: 400px;
+            height: 400px;
+        }
+
+        body.desktop-mode .sign-letter {
+            font-size: 72px;
+        }
+
+        body.desktop-mode .card {
+            max-width: 100%;
+        }
+
+        body.desktop-mode .steps-card {
+            max-width: 100%;
+        }
+
+        body.desktop-mode .nav-row {
+            max-width: 100%;
+        }
+
+        /* Translate mode desktop */
+        body.desktop-mode .translate-levels {
             max-width: 600px;
             margin: 0 auto 24px;
         }
 
         body.desktop-mode .stats-row {
-            max-width: 500px;
-            margin: 0 auto 20px;
+            max-width: 100%;
+            justify-content: center;
+            gap: 24px;
         }
 
-        body.desktop-mode .translate-levels {
-            max-width: 500px;
-            margin: 0 auto 20px;
+        body.desktop-mode .stat-card {
+            min-width: 120px;
         }
 
         body.desktop-mode .translate-question-card {
-            max-width: 900px;
-            margin: 0 auto;
+            max-width: 100%;
+            padding: 40px;
         }
 
         body.desktop-mode .translate-images {
-            gap: 20px;
+            gap: 24px;
+            padding: 20px;
         }
 
         body.desktop-mode .translate-images img {
-            width: 160px;
-            height: 160px;
+            width: 180px;
+            height: 180px;
+            padding: 16px;
         }
 
         body.desktop-mode .translate-input-area {
-            max-width: 500px;
-            margin: 0 auto 16px;
-        }
-
-        body.desktop-mode .sign-display {
-            max-width: 500px;
-            margin: 0 auto 16px;
-        }
-
-        body.desktop-mode .sign-image {
-            width: 350px;
-            height: 350px;
-        }
-
-        body.desktop-mode .card {
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        body.desktop-mode .nav-row {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        body.desktop-mode .progress-container {
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto 20px;
+        }
+
+        body.desktop-mode .translate-input {
+            font-size: 24px;
+            padding: 16px 20px;
+        }
+
+        body.desktop-mode .translate-submit-btn {
+            font-size: 18px;
+            padding: 16px 32px;
+        }
+
+        body.desktop-mode #translateNext {
+            max-width: 400px;
+            margin: 0 auto;
+            font-size: 18px;
+            padding: 16px;
+        }
+
+        /* Test/Practice mode desktop */
+        body.desktop-mode .camera-container {
+            max-width: 100%;
+        }
+
+        body.desktop-mode .quiz-prompt {
+            padding: 24px;
+        }
+
+        body.desktop-mode .quiz-prompt img {
+            width: 200px;
+            height: 200px;
+        }
+
+        /* Phrases mode desktop */
+        body.desktop-mode .phrase-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        body.desktop-mode .phrase-display-card {
+            max-width: 100%;
+        }
+
+        body.desktop-mode #phraseLettersContainer {
+            gap: 16px;
+        }
+
+        body.desktop-mode .phrase-letter-card {
+            min-width: 100px;
+            padding: 16px;
+        }
+
+        body.desktop-mode .phrase-letter-card img {
+            width: 80px;
+            height: 80px;
         }
 
         /* Hide toggle on small screens */
