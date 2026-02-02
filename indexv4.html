@@ -1365,17 +1365,14 @@
             <!-- Level Selector -->
             <div class="translate-levels">
                 <button class="level-btn active" data-level="easy">
-                    <span class="level-icon">A</span>
                     <span class="level-name">Easy</span>
                     <span class="level-desc">Single Letters</span>
                 </button>
                 <button class="level-btn" data-level="medium">
-                    <span class="level-icon">Aa</span>
                     <span class="level-name">Medium</span>
                     <span class="level-desc">Words</span>
                 </button>
                 <button class="level-btn" data-level="hard">
-                    <span class="level-icon">Aa.</span>
                     <span class="level-name">Hard</span>
                     <span class="level-desc">Sentences</span>
                 </button>
@@ -1728,6 +1725,11 @@
                     panels.forEach(p => p.classList.remove('active'));
                     document.getElementById(mode + 'Panel').classList.add('active');
                     currentMode = mode;
+                    
+                    // Generate translate question when switching to translate mode
+                    if (mode === 'translate') {
+                        generateTranslateQuestion();
+                    }
                 });
             });
         }
@@ -4108,8 +4110,7 @@
                 generateTranslateQuestion();
             });
 
-            // Generate first question
-            generateTranslateQuestion();
+            // Don't generate on init - wait until panel is shown
         }
 
         function generateTranslateQuestion() {
