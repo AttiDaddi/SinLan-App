@@ -911,6 +911,142 @@
             color: var(--sage);
         }
 
+        /* Translate Mode Styles */
+        .translate-levels {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .level-btn {
+            flex: 1;
+            background: white;
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            padding: 16px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .level-btn:hover {
+            border-color: var(--ink-muted);
+            transform: translateY(-2px);
+        }
+
+        .level-btn.active {
+            border-color: var(--coral);
+            background: var(--coral-light);
+        }
+
+        .level-icon {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .level-btn.active .level-icon {
+            color: var(--coral);
+        }
+
+        .level-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--ink);
+        }
+
+        .level-desc {
+            font-size: 11px;
+            color: var(--ink-muted);
+        }
+
+        .translate-question-card {
+            padding: 24px;
+        }
+
+        .translate-images {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .translate-images img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            background: var(--warm-white);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+        }
+
+        .translate-input-area {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .translate-input {
+            flex: 1;
+            padding: 14px 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border: 2px solid var(--ink-muted);
+            border-radius: var(--radius-md);
+            outline: none;
+            transition: border-color 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .translate-input:focus {
+            border-color: var(--coral);
+        }
+
+        .translate-submit-btn {
+            padding: 14px 24px;
+            background: var(--coral);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .translate-submit-btn:hover {
+            background: #D94E3D;
+            transform: translateY(-1px);
+        }
+
+        .translate-submit-btn:disabled {
+            background: var(--ink-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #translateFeedback {
+            text-align: center;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+        }
+
+        #translateFeedback.success {
+            background: var(--sage-light);
+            color: var(--sage);
+        }
+
+        #translateFeedback.error {
+            background: var(--coral-light);
+            color: var(--coral);
+        }
+
+
     </style>
 </head>
 <body>
@@ -936,6 +1072,10 @@
             <button class="mode-tab" data-mode="phrases">
                 <span class="icon">💬</span>
                 <span>Phrases</span>
+            </button>
+            <button class="mode-tab" data-mode="translate">
+                <span class="icon">🔤</span>
+                <span>Translate</span>
             </button>
         </nav>
         
@@ -1215,6 +1355,69 @@
             <p class="section-label">Emergency</p>
             <div class="phrase-grid" id="emergencyGrid"></div>
         </section>
+
+        <!-- TRANSLATE MODE -->
+        <section id="translatePanel" class="panel">
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="margin: 0 0 8px 0; font-family: 'Fraunces', serif;">ASL Translation Practice</h3>
+                <p style="margin: 0; color: var(--ink-muted); font-size: 14px;">Look at the hand signs and type what you see. Choose your difficulty level below.</p>
+            </div>
+
+            <!-- Level Selector -->
+            <div class="translate-levels">
+                <button class="level-btn active" data-level="easy">
+                    <span class="level-icon">A</span>
+                    <span class="level-name">Easy</span>
+                    <span class="level-desc">Single Letters</span>
+                </button>
+                <button class="level-btn" data-level="medium">
+                    <span class="level-icon">Aa</span>
+                    <span class="level-name">Medium</span>
+                    <span class="level-desc">Words</span>
+                </button>
+                <button class="level-btn" data-level="hard">
+                    <span class="level-icon">Aa.</span>
+                    <span class="level-name">Hard</span>
+                    <span class="level-desc">Sentences</span>
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value success" id="translateCorrect">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="translateTotal">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="translateStreak">0</div>
+                    <div class="stat-label">Streak</div>
+                </div>
+            </div>
+
+            <!-- Question Display -->
+            <div class="card translate-question-card">
+                <div class="translate-images" id="translateImages">
+                    <!-- Letter images will be inserted here -->
+                </div>
+
+                <div class="translate-input-area">
+                    <input type="text" id="translateInput" class="translate-input" placeholder="Type your answer..." autocomplete="off" autocapitalize="off">
+                    <button id="translateSubmit" class="translate-submit-btn">Check Answer</button>
+                </div>
+
+                <div id="translateFeedback" class="feedback-banner" style="display: none;"></div>
+            </div>
+
+            <!-- Next Button -->
+            <button id="translateNext" class="nav-btn" style="width: 100%; display: none;">
+                Next Question
+            </button>
+        </section>
+
     </div>
 
     <script>
@@ -1513,6 +1716,7 @@
             generateTestQuestion();
             buildSignGrids();
             buildPhraseGrids();
+            setupTranslateMode();
         }
         
         // Mode Navigation
@@ -3851,6 +4055,165 @@
 
         // Start app
         init();
+
+        // ===== TRANSLATE MODE =====
+        let translateLevel = 'easy';
+        let translateCorrect = 0;
+        let translateTotal = 0;
+        let translateStreak = 0;
+        let currentTranslateAnswer = '';
+
+        // Word list for medium difficulty
+        const TRANSLATE_WORDS = [
+            'HELLO', 'WORLD', 'LOVE', 'PEACE', 'HAPPY', 'THANK', 'PLEASE', 'SORRY',
+            'FRIEND', 'FAMILY', 'WATER', 'FOOD', 'HELP', 'GOOD', 'BAD', 'YES', 'NO',
+            'CAT', 'DOG', 'BIRD', 'FISH', 'TREE', 'SUN', 'MOON', 'STAR', 'RAIN',
+            'BOOK', 'PHONE', 'HOME', 'WORK', 'PLAY', 'SLEEP', 'EAT', 'DRINK'
+        ];
+
+        // Sentence list for hard difficulty
+        const TRANSLATE_SENTENCES = [
+            'HELLO WORLD', 'THANK YOU', 'GOOD MORNING', 'GOOD NIGHT', 'HOW ARE YOU',
+            'I LOVE YOU', 'NICE TO MEET YOU', 'PLEASE HELP', 'I AM HAPPY', 'I AM SORRY',
+            'WHAT IS YOUR NAME', 'MY NAME IS', 'SEE YOU LATER', 'HAVE A GOOD DAY'
+        ];
+
+        function setupTranslateMode() {
+            // Level buttons
+            const levelBtns = document.querySelectorAll('.level-btn');
+            levelBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    levelBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    translateLevel = btn.dataset.level;
+                    generateTranslateQuestion();
+                });
+            });
+
+            // Submit button
+            document.getElementById('translateSubmit').addEventListener('click', checkTranslateAnswer);
+
+            // Input enter key
+            document.getElementById('translateInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    checkTranslateAnswer();
+                }
+            });
+
+            // Next button
+            document.getElementById('translateNext').addEventListener('click', () => {
+                document.getElementById('translateNext').style.display = 'none';
+                document.getElementById('translateFeedback').style.display = 'none';
+                document.getElementById('translateSubmit').disabled = false;
+                document.getElementById('translateInput').disabled = false;
+                generateTranslateQuestion();
+            });
+
+            // Generate first question
+            generateTranslateQuestion();
+        }
+
+        function generateTranslateQuestion() {
+            let answer = '';
+            
+            if (translateLevel === 'easy') {
+                // Random single letter
+                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                answer = letters[Math.floor(Math.random() * letters.length)];
+            } else if (translateLevel === 'medium') {
+                // Random word
+                answer = TRANSLATE_WORDS[Math.floor(Math.random() * TRANSLATE_WORDS.length)];
+            } else {
+                // Random sentence
+                answer = TRANSLATE_SENTENCES[Math.floor(Math.random() * TRANSLATE_SENTENCES.length)];
+            }
+
+            currentTranslateAnswer = answer;
+            
+            // Display the images
+            const container = document.getElementById('translateImages');
+            container.innerHTML = '';
+            
+            // Get letters (filter out spaces for display)
+            const letters = answer.replace(/ /g, '').split('');
+            
+            letters.forEach((letter, index) => {
+                const img = document.createElement('img');
+                const signId = letter.toLowerCase();
+                if (ASL_IMAGES[signId]) {
+                    img.src = ASL_IMAGES[signId];
+                    img.alt = 'ASL Sign';
+                    container.appendChild(img);
+                }
+                
+                // Add a space indicator between words for sentences
+                if (translateLevel === 'hard' && index < letters.length - 1) {
+                    // Check if next position in original answer (with spaces) would be a space
+                    let originalIndex = 0;
+                    let letterCount = 0;
+                    for (let i = 0; i < answer.length && letterCount <= index; i++) {
+                        if (answer[i] !== ' ') {
+                            if (letterCount === index && answer[i + 1] === ' ') {
+                                const spacer = document.createElement('div');
+                                spacer.style.width = '20px';
+                                spacer.style.display = 'flex';
+                                spacer.style.alignItems = 'center';
+                                spacer.style.justifyContent = 'center';
+                                spacer.style.color = 'var(--ink-muted)';
+                                spacer.style.fontSize = '24px';
+                                spacer.textContent = '|';
+                                container.appendChild(spacer);
+                            }
+                            letterCount++;
+                        }
+                    }
+                }
+            });
+
+            // Clear input
+            document.getElementById('translateInput').value = '';
+            document.getElementById('translateInput').focus();
+        }
+
+        function checkTranslateAnswer() {
+            const input = document.getElementById('translateInput').value.toUpperCase().trim();
+            const feedback = document.getElementById('translateFeedback');
+            
+            if (!input) {
+                feedback.textContent = 'Please enter an answer';
+                feedback.className = 'feedback-banner error';
+                feedback.style.display = 'block';
+                return;
+            }
+
+            translateTotal++;
+            document.getElementById('translateTotal').textContent = translateTotal;
+
+            if (input === currentTranslateAnswer) {
+                // Correct!
+                translateCorrect++;
+                translateStreak++;
+                document.getElementById('translateCorrect').textContent = translateCorrect;
+                document.getElementById('translateStreak').textContent = translateStreak;
+                
+                feedback.textContent = 'Correct!';
+                feedback.className = 'feedback-banner success';
+            } else {
+                // Wrong
+                translateStreak = 0;
+                document.getElementById('translateStreak').textContent = translateStreak;
+                
+                feedback.textContent = 'Incorrect. The answer was: ' + currentTranslateAnswer;
+                feedback.className = 'feedback-banner error';
+            }
+
+            feedback.style.display = 'block';
+            document.getElementById('translateSubmit').disabled = true;
+            document.getElementById('translateInput').disabled = true;
+            document.getElementById('translateNext').style.display = 'block';
+        }
+
+    
     </script>
 </body>
 </html>
