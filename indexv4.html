@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SigLan - Sign Language Learning</title>
+    <title>SinLan - Sign Language Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -29,6 +29,10 @@
             --radius-sm: 8px;
             --radius-md: 16px;
             --radius-lg: 24px;
+            --cyan: #00BCD4;
+            --yellow: #FFD700;
+            --yellow-light: #FFFDE7;
+            --yellow-dark: #FFC000;
         }
         
         body {
@@ -60,11 +64,11 @@
             font-family: 'Fraunces', serif;
             font-size: 28px;
             font-weight: 800;
-            color: var(--ink);
+            color: var(--cyan);
             letter-spacing: -0.02em;
         }
         
-        .logo span { color: var(--coral); }
+        .logo span { color: var(--yellow); }
         
         .tagline {
             font-size: 13px;
@@ -85,12 +89,14 @@
         
         .mode-tab {
             flex: 1;
-            padding: 14px 8px;
+            padding: 12px 4px;
             border: none;
             background: transparent;
             border-radius: 20px;
             font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
+            font-size: 11px;
+            min-width: 0;
+            overflow: visible;
             font-weight: 600;
             color: var(--ink-muted);
             cursor: pointer;
@@ -108,7 +114,7 @@
         
         .mode-tab.active {
             background: var(--yellow);
-            color: white;
+            color: var(--ink);
         }
         
         .mode-tab.active .icon {
@@ -1010,7 +1016,6 @@
             padding: 14px 24px;
             background: var(--yellow);
             color: var(--ink);
-            color: white;
             border: none;
             border-radius: var(--radius-md);
             font-weight: 700;
@@ -1251,7 +1256,7 @@
     <div class="app-container">
         <header class="header">
             <div class="header-top">
-                <h1 class="logo">Sig<span>Lan</span></h1>
+                <h1 class="logo">Sin<span>Lan</span></h1>
                 <button id="viewToggle" class="view-toggle" title="Toggle Desktop View">
                     <span class="view-icon">🖥️</span>
                     <span class="view-label">Desktop</span>
@@ -4415,6 +4420,7 @@
             feedback.style.display = 'block';
             document.getElementById('translateSubmit').disabled = true;
             document.getElementById('translateInput').disabled = true;
+            document.getElementById('translateInput').value = '';
             
             // Auto-advance after 1.5 seconds
             setTimeout(() => {
