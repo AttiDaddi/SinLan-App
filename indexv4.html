@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ASL Learning App</title>
+    <title>SigLan - Sign Language Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -107,7 +107,7 @@
         }
         
         .mode-tab.active {
-            background: var(--ink);
+            background: var(--yellow);
             color: white;
         }
         
@@ -937,8 +937,8 @@
         }
 
         .level-btn.active {
-            border-color: var(--coral);
-            background: var(--coral-light);
+            border-color: var(--yellow);
+            background: var(--yellow-light);
         }
 
         .level-icon {
@@ -1008,7 +1008,8 @@
 
         .translate-submit-btn {
             padding: 14px 24px;
-            background: var(--coral);
+            background: var(--yellow);
+            color: var(--ink);
             color: white;
             border: none;
             border-radius: var(--radius-md);
@@ -1019,7 +1020,7 @@
         }
 
         .translate-submit-btn:hover {
-            background: #D94E3D;
+            background: var(--yellow-dark);
             transform: translateY(-1px);
         }
 
@@ -1250,13 +1251,13 @@
     <div class="app-container">
         <header class="header">
             <div class="header-top">
-                <h1 class="logo">ASL<span>Learn</span></h1>
+                <h1 class="logo">Sig<span>Lan</span></h1>
                 <button id="viewToggle" class="view-toggle" title="Toggle Desktop View">
                     <span class="view-icon">🖥️</span>
                     <span class="view-label">Desktop</span>
                 </button>
             </div>
-            <p class="tagline">Master the American Sign Language alphabet</p>
+            <p class="tagline">Master American Sign Language</p>
         </header>
         
         <nav class="mode-nav">
@@ -1612,7 +1613,7 @@
                 <div id="translateFeedback" class="feedback-banner" style="display: none;"></div>
             </div>
 
-            <!-- Next Button -->
+            <!-- Next Button (hidden - auto-advances now) -->
             <button id="translateNext" class="nav-btn" style="width: 100%; display: none;">
                 Next Question
             </button>
@@ -4414,7 +4415,14 @@
             feedback.style.display = 'block';
             document.getElementById('translateSubmit').disabled = true;
             document.getElementById('translateInput').disabled = true;
-            document.getElementById('translateNext').style.display = 'block';
+            
+            // Auto-advance after 1.5 seconds
+            setTimeout(() => {
+                document.getElementById('translateFeedback').style.display = 'none';
+                document.getElementById('translateSubmit').disabled = false;
+                document.getElementById('translateInput').disabled = false;
+                generateTranslateQuestion();
+            }, 1500);
         }
 
     
