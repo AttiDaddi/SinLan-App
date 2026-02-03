@@ -1090,7 +1090,7 @@
         }
 
         /* Desktop/Fullscreen Mode - FULL WIDTH */
-        body.desktop-mode .container {
+        body.desktop-mode .app-container {
             max-width: 100% !important;
             width: 100% !important;
             padding: 0 48px 100px !important;
@@ -4421,7 +4421,7 @@
     
         // ===== DESKTOP VIEW TOGGLE =====
         function applyDesktopMode(isDesktop) {
-            const container = document.querySelector('.container');
+            const container = document.querySelector('.app-container');
             if (!container) return;
             
             if (isDesktop) {
