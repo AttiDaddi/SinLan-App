@@ -29,6 +29,10 @@
             --radius-sm: 8px;
             --radius-md: 16px;
             --radius-lg: 24px;
+            --cyan: #00BCD4;
+            --yellow: #FFD700;
+            --yellow-light: #FFFDE7;
+            --yellow-dark: #FFC000;
         }
         
         body {
@@ -60,11 +64,11 @@
             font-family: 'Fraunces', serif;
             font-size: 28px;
             font-weight: 800;
-            color: var(--ink);
+            color: var(--cyan);
             letter-spacing: -0.02em;
         }
         
-        .logo span { color: var(--coral); }
+        .logo span { color: var(--yellow); }
         
         .tagline {
             font-size: 13px;
@@ -85,12 +89,14 @@
         
         .mode-tab {
             flex: 1;
-            padding: 14px 8px;
+            padding: 12px 4px;
             border: none;
             background: transparent;
             border-radius: 20px;
             font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
+            font-size: 11px;
+            min-width: 0;
+            overflow: visible;
             font-weight: 600;
             color: var(--ink-muted);
             cursor: pointer;
@@ -108,7 +114,7 @@
         
         .mode-tab.active {
             background: var(--yellow);
-            color: white;
+            color: var(--ink);
         }
         
         .mode-tab.active .icon {
