@@ -4420,16 +4420,33 @@
 
     
         // ===== DESKTOP VIEW TOGGLE =====
+        function applyDesktopMode(isDesktop) {
+            const container = document.querySelector('.container');
+            if (!container) return;
+            
+            if (isDesktop) {
+                container.style.maxWidth = '100%';
+                container.style.width = '100%';
+                container.style.padding = '0 48px 100px';
+            } else {
+                container.style.maxWidth = '480px';
+                container.style.width = '';
+                container.style.padding = '0 16px 100px';
+            }
+        }
+
         function setupViewToggle() {
             const toggle = document.getElementById('viewToggle');
             if (!toggle) return;
 
             // Check if user previously enabled desktop mode
-            if (localStorage.getItem('desktopMode') === 'true') {
+            const isDesktopSaved = localStorage.getItem('desktopMode') === 'true';
+            if (isDesktopSaved) {
                 document.body.classList.add('desktop-mode');
                 toggle.classList.add('active');
                 toggle.querySelector('.view-label').textContent = 'Mobile';
                 toggle.querySelector('.view-icon').textContent = '📱';
+                applyDesktopMode(true);
             }
 
             toggle.addEventListener('click', () => {
@@ -4439,6 +4456,9 @@
                 toggle.classList.toggle('active', isDesktop);
                 toggle.querySelector('.view-label').textContent = isDesktop ? 'Mobile' : 'Desktop';
                 toggle.querySelector('.view-icon').textContent = isDesktop ? '📱' : '🖥️';
+                
+                // Apply styles directly
+                applyDesktopMode(isDesktop);
                 
                 // Remember preference
                 localStorage.setItem('desktopMode', isDesktop);
