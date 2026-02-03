@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SigLan - Sign Language Learning</title>
+    <title>SinLan - Sign Language Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -1011,7 +1011,6 @@
             padding: 14px 24px;
             background: var(--yellow);
             color: var(--ink);
-            color: white;
             border: none;
             border-radius: var(--radius-md);
             font-weight: 700;
@@ -1252,7 +1251,7 @@
     <div class="app-container">
         <header class="header">
             <div class="header-top">
-                <h1 class="logo">Sig<span>Lan</span></h1>
+                <h1 class="logo">Sin<span>Lan</span></h1>
                 <button id="viewToggle" class="view-toggle" title="Toggle Desktop View">
                     <span class="view-icon">🖥️</span>
                     <span class="view-label">Desktop</span>
@@ -4416,6 +4415,7 @@
             feedback.style.display = 'block';
             document.getElementById('translateSubmit').disabled = true;
             document.getElementById('translateInput').disabled = true;
+            document.getElementById('translateInput').value = '';
             
             // Auto-advance after 1.5 seconds
             setTimeout(() => {
