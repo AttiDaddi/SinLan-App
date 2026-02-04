@@ -106,6 +106,13 @@
             align-items: center;
             gap: 4px;
         }
+
+        .mode-tab span:not(.icon) {
+            display: block;
+            white-space: nowrap;
+            font-size: 11px;
+            line-height: 1.2;
+        }
         
         .mode-tab .icon {
             font-size: 20px;
@@ -995,6 +1002,7 @@
             display: flex;
             gap: 12px;
             margin-bottom: 16px;
+            align-items: stretch;
         }
 
         .translate-input {
@@ -1023,6 +1031,9 @@
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s ease;
+            flex-shrink: 0;
+            white-space: nowrap;
+            display: inline-block;
         }
 
         .translate-submit-btn:hover {
@@ -1257,7 +1268,7 @@
     <div class="app-container">
         <header class="header">
             <div class="header-top">
-                <h1 class="logo">Sin<span>Lan</span></h1>
+                <h1 class="logo">Sig<span>Lan</span></h1>
                 <button id="viewToggle" class="view-toggle" title="Toggle Desktop View">
                     <span class="view-icon">🖥️</span>
                     <span class="view-label">Desktop</span>
